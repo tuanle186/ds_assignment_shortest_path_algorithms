@@ -82,21 +82,32 @@ void BF(int graph[][3], int numEdges, char startVertex, int BFValue[], int BFPre
         }
     }
 
-
-    // for (int i = 0; i < num_unique; i++) {
-    //     // cout << char(sorted_unique_vertices[i]) << endl;
-    //     cout << sorted_unique_vertices[i] << endl;
-    // }
-
-
-    // 4. Perform the relaxation step
-    // cout << getVertexIndex(99, sorted_unique_vertices, num_unique) << endl;
-
-    // Loop through all vertices
     for (int i = 0; i < num_unique; i++) {
+        // cout << char(sorted_unique_vertices[i]) << endl;
         cout << sorted_unique_vertices[i] << endl;
     }
 
+    // 4. Perform the relaxation step
+    // Make sure the label of the startVertex is 0
+    int startVertexIndex = getVertexIndex(startVertex, sorted_unique_vertices, num_unique);
+    BFValue[startVertexIndex] = 0;
+    for (int i = 0; i < numEdges; i++) {
+        int u = graph[i][0];
+        int v = graph[i][1];
+        int weight = graph[i][2];
 
+        int u_idx = getVertexIndex(u, sorted_unique_vertices, num_unique);
+        int v_idx = getVertexIndex(v, sorted_unique_vertices, num_unique);
 
+        if (BFValue[u_idx] != -1) {
+            if ((BFValue[u_idx] + weight < BFValue[v_idx]) || (BFValue[v_idx] == -1)) {
+                BFValue[v_idx] = BFValue[u_idx] + weight;
+                BFPrev[v_idx] = u;
+            }
+        }
+    }
+
+    // 5. Clean up dynamically allocated memory
+    delete[] all_vertices;
+    delete[] sorted_unique_vertices;
 }

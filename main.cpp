@@ -25,7 +25,7 @@ int main()
     bool randGen=0;
     int edgeList[MAX][3];
     int numEdges=8;
-    int numVertices=10;
+    int numVertices=6;
     int initlimit=15;
 
     if (!randGen) {
@@ -69,10 +69,24 @@ int main()
     }
     */
 
-    int BFValue[50];
-    int BFPrev[50];
-    char start_vertices=edgeList[0][0];
-    BF(edgeList, numEdges, start_vertices, BFValue, BFPrev);
+    int BFValue[6] = {-1, -1, -1, -1, -1, -1};
+    int BFPrev[6] = {-1, -1, -1, -1, -1, -1};
+    // char start_vertices=edgeList[0][0];
+    char start_vertices=83;
+
+    for (int i = 0; i < numVertices; i++) {
+        BF(edgeList, numEdges, start_vertices, BFValue, BFPrev);
+    }
+
+    for (int i = 0; i < numVertices; i++) {
+        cout << BFValue[i] << ", ";
+    }
+
+    cout << endl;
+
+    for (int i = 0; i < numVertices; i++) {
+        cout << BFPrev[i] << ", ";
+    }
 
     return 0;
     
