@@ -17,6 +17,33 @@ void bubbleSort(int arr[], int n) {
     }
 }
 
+
+int getVertexIndex(int vertex, const int sorted_unique_vertices[], int num_unique) {
+    if (sorted_unique_vertices == nullptr) {
+        return -1;
+    }
+
+    // Binary Search
+    int low = 0;
+    int high = num_unique - 1;
+
+    while (low <= high) {
+        int mid = low + (high - low)/2;
+
+        // Check if vertex is present at mid
+        if (sorted_unique_vertices[mid] == vertex) return mid;
+
+        // If vertex is greater than mid, ignore the left half
+        if (sorted_unique_vertices[mid] < vertex) low = mid + 1;
+
+        // If vertex is less than mid, ignore the right half
+        else high = mid - 1;
+    }
+
+    return -1; // Vertex is not found
+}
+
+
 void BF(int graph[][3], int numEdges, char startVertex, int BFValue[], int BFPrev[]) {
     if (numEdges <= 0) {
         return; // No edges to process
@@ -49,17 +76,29 @@ void BF(int graph[][3], int numEdges, char startVertex, int BFValue[], int BFPre
 
     int num_unique = 0;
     if (vertices_count > 0) {
-        sorted_unique_vertices[num_unique] = all_vertices[0];
-        num_unique++;
+        sorted_unique_vertices[num_unique++] = all_vertices[0];
         for (int i = 1; i < vertices_count; i++) {
             if (all_vertices[i] != all_vertices[i - 1]) {
-                sorted_unique_vertices[num_unique] = all_vertices[i];
-                num_unique++;
+                sorted_unique_vertices[num_unique++] = all_vertices[i];
             }
         }
     }
 
+
+    // for (int i = 0; i < num_unique; i++) {
+    //     // cout << char(sorted_unique_vertices[i]) << endl;
+    //     cout << sorted_unique_vertices[i] << endl;
+    // }
+
+
+    // 4. Perform the relaxation step
+    // cout << getVertexIndex(99, sorted_unique_vertices, num_unique) << endl;
+
+    // Loop through all vertices
     for (int i = 0; i < num_unique; i++) {
-        cout << char(sorted_unique_vertices[i]) << endl;
+        cout << sorted_unique_vertices[i] << endl;
     }
+
+
+
 }
