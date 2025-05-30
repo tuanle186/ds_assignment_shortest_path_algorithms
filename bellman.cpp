@@ -1,8 +1,6 @@
 #include <iostream>
 using namespace std;
 
-const int INFINITY = 2147483647;
-
 void bubbleSort(int arr[], int n) {
     if (arr == nullptr || n <= 1) return;
     for (int i = 0; i < n - 1; ++i) {
