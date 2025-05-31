@@ -18,7 +18,7 @@ int edgeListGen(int[][3],int,int,int); //Function to generate a random edges lis
 int main() {
 
     string input_file_name = "EdgeList2.txt";
-    char start_vertices = 87;
+    // char start_vertex = 87;
 
     // Read from file
     int edgeList[MAX][3]; // To store the graph
@@ -45,6 +45,7 @@ int main() {
     //     printedge(edgeList[i]);
     // }
 
+    /*
     // Initialize BFValue and BFPrev with all -1s
     int BFValue[numVertices];
     int BFPrev[numVertices];
@@ -54,13 +55,23 @@ int main() {
     }
 
     // Run the bellman-ford algorithm
-    for (int i = 0; i < numVertices; i++) BF(edgeList, numEdges, start_vertices, BFValue, BFPrev);
+    for (int i = 0; i < numVertices; i++) BF(edgeList, numEdges, start_vertex, BFValue, BFPrev);
 
     cout << "BFValue: ";
     for (int i = 0; i < numVertices; i++) cout << BFValue[i] << ", ";
     cout << endl;
     cout << "BFPrev: ";
     for (int i = 0; i < numVertices; i++) cout << BFPrev[i] << ", ";
+    */
+
+    string bf_path = BF_Path(edgeList, numEdges, 67, 36);
+    cout << "bf_path = " << bf_path << endl;
+
+    cout << "bf_path_dec_ver = ";
+    for (int i = 0; i < bf_path.length(); i++) {
+        if (bf_path[i] != ' ')
+            cout << int(bf_path[i]) << " ";
+    }
 
     return 0;
 }

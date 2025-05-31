@@ -47,10 +47,8 @@ void getSortedUniqueVertices(int graph[][3], int numEdges, int& numUniqueVertice
     }
 
     // 1. Collect all vertices from the graph, 
-    // maximum number of vertices is 2 * numEdges
-    int* all_vertices_not_filtered = new int[2 * numEdges];
-    if (all_vertices_not_filtered == nullptr) {
-        // Failed to allocate memory
+    int* all_vertices_not_filtered = new int[2 * numEdges]; // maximum number of vertices is 2 * numEdges
+    if (all_vertices_not_filtered == nullptr) { // Failed to allocate memory
         return; 
     }
 
@@ -119,16 +117,83 @@ void BF(int graph[][3], int numEdges, char startVertex, int BFValue[], int BFPre
 }
 
 
-// string BF_Path(int graph[][3], int numEdges, char startVertex, int goalVertex) {
-//     if (numEdges <= 0) {
-//         return; // No edges to process
-//     }
+#if DEBUGGING
+void printBFValue(int BFValue[], int n) {
+    cout << "BFValue: ";
+    for (int i = 0; i < n; i++) cout << BFValue[i] << ", ";
+    cout << endl;
+}
 
-//     // Initialize BFValue and BFPrev with all -1s
-//     int BFValue[numVertices];
-//     int BFPrev[numVertices];
-//     for (int i = 0; i < numVertices; i++) {
-//         BFValue[i] = -1;
-//         BFPrev[i] = -1;
-//     }
-// }
+void printBFPrev(int BFPrev[], int n) {
+    cout << "BFPrev: ";
+    for (int i = 0; i < n; i++) cout << BFPrev[i] << ", ";
+    cout << endl;
+}
+#endif
+
+
+string BF_Path(int graph[][3], int numEdges, char startVertex, char goalVertex) {
+    if (numEdges <= 0) return ""; // No edges to process
+    else if (startVertex == goalVertex) return string(1, startVertex);
+
+    int* sortedUniqueVertices;
+    int numUniqueVertices = 0;
+    getSortedUniqueVertices(graph, numEdges, numUniqueVertices, sortedUniqueVertices);
+
+    // Initialize BFValue and BFPrev with all -1s
+    int* BFValue = new int[numUniqueVertices];
+    int* BFPrev = new int[numUniqueVertices];
+    for (int i = 0; i < numUniqueVertices; i++) {
+        BFValue[i] = -1;
+        BFPrev[i] = -1;
+    }
+
+    int BFValueTmp[numUniqueVertices];
+    for (int i = 0; i < numUniqueVertices - 1; i++)
+        BF(graph, numEdges, startVertex, BFValue, BFPrev);
+
+    #if DEBUGGING
+    printBFValue(BFValue, numUniqueVertices);
+    printBFPrev(BFPrev, numUniqueVertices);
+    #endif
+
+    //
+    // int goalVertexInt = static_cast<int>(goalVertex); // Assuming ASCII/direct mapping
+    // int goalVertexIdx = getVertexIndex(goalVertexInt, sortedUniqueVertices, numUniqueVertices);
+
+    // if (goalVertexIdx == -1 || BFValue[goalVertexIdx] == -1 /* or infinity representation */) {
+    //     // Clean up allocated memory before returning
+    //     delete[] sortedUniqueVertices;
+    //     delete[] BFValue;
+    //     delete[] BFPrev;
+    //     return ""; // Or "Path not found" or an appropriate indicator
+    // }
+    //
+
+    string bf_path = "";
+    bf_path = bf_path + goalVertex;
+    int startVertexIdx = getVertexIndex(startVertex, sortedUniqueVertices, numUniqueVertices);
+    int goalVertexIdx = getVertexIndex(goalVertex, sortedUniqueVertices, numUniqueVertices);
+
+    if (BFValue[goalVertexIdx] == -1) {
+        delete[] sortedUniqueVertices;
+        delete[] BFValue;
+        delete[] BFPrev;
+        return "";
+    }
+
+    int currVertexIdx = goalVertexIdx;
+    while (currVertexIdx != startVertexIdx) {
+        char prevVertex = BFPrev[currVertexIdx];
+        bf_path = ' ' + bf_path;
+        bf_path = prevVertex + bf_path;
+        currVertexIdx = getVertexIndex(prevVertex, sortedUniqueVertices, numUniqueVertices);
+    }
+
+    // Clean up dynamically allocated memory
+    delete[] sortedUniqueVertices;
+    delete[] BFValue;
+    delete[] BFPrev;
+
+    return bf_path;
+}
