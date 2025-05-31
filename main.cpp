@@ -5,45 +5,49 @@
 #include <vector>
 #include <algorithm>
 #include <random>
+#include <set>
 #include "bellman.h"
 using namespace std;
 #define MAX 1000
 
-//Function to print an edge
-void printedge(int[]);
-//Function to generate a random edges list
-int edgeListGen(int[][3],int,int,int);
+
+void printedge(int[]); //Function to print an edge
+int edgeListGen(int[][3],int,int,int); //Function to generate a random edges list
 
 
-//main Function
 int main() {
-    //Function name for checking:
-    // enum Func_check {BF,BF_Path,Traveling,none};
-    
-    bool randGen = 0;
+
+    string input_file_name = "EdgeList2.txt";
+    char start_vertices = 56;
+
+    // Read from file
     int edgeList[MAX][3];
-
-    int numEdges = 8;
-    int numVertices = 6;
-    int initlimit = 15;
-
-    if (!randGen) {
-        //Read from file
-        ifstream fin("EdgeList.txt");
-        for (int i = 0; i < numEdges; i++) {
-            fin >> edgeList[i][0] >> edgeList[i][1] >> edgeList[i][2];
-        }
-        fin.close();
-    } else {
-        // Generate a random edgelist:
-        if (edgeListGen(edgeList,numEdges,numVertices,initlimit) < 0) return -1;
+    int numEdges = 0;
+    string line;
+    ifstream fin(input_file_name);
+    while (getline(fin, line)) {
+        fin >> edgeList[numEdges][0] >> edgeList[numEdges][1] >> edgeList[numEdges][2];
+        numEdges++;
     }
+    fin.close();
 
-    // Print the generated edgelist:
-    // for (int i = 0; i < numEdges; i++) {
-    //     printedge(edgeList[i]);
-    // }
-    
+    // Compute the number of vertices
+    set<int> vertices;
+    for (int i = 0; i < numEdges; i++) {
+        vertices.insert(edgeList[i][0]);
+        vertices.insert(edgeList[i][1]);
+    }
+    int numVertices = vertices.size();
+
+    cout << "Number of edges = " << numEdges << endl;
+    cout << "Number of vertices = " << numVertices << endl;
+
+    // Print the edgelist:
+    /*
+    for (int i = 0; i < numEdges; i++) {
+        printedge(edgeList[i]);
+    }
+    */
 
     // Initialize BFValue and BFPrev with all -1s
     int BFValue[numVertices];
@@ -53,21 +57,12 @@ int main() {
         BFPrev[i] = -1;
     }
 
-    char start_vertices = 67;
+    // Run the bellman-ford algorithm
+    for (int i = 0; i < numVertices; i++) BF(edgeList, numEdges, start_vertices, BFValue, BFPrev);
 
-    for (int i = 0; i < numVertices; i++) {
-        BF(edgeList, numEdges, start_vertices, BFValue, BFPrev);
-    }
-
-    for (int i = 0; i < numVertices; i++) {
-        cout << BFValue[i] << ", ";
-    }
-
+    for (int i = 0; i < numVertices; i++) cout << BFValue[i] << ", ";
     cout << endl;
-
-    for (int i = 0; i < numVertices; i++) {
-        cout << char(BFPrev[i]) << ", ";
-    }
+    for (int i = 0; i < numVertices; i++) cout << BFPrev[i] << ", ";
 
     return 0;
 }

@@ -81,6 +81,8 @@ void BF(int graph[][3], int numEdges, char startVertex, int BFValue[], int BFPre
             }
         }
     }
+
+    // cout << "numVertices: " << num_unique << endl;
     
     // 4. Perform the relaxation step
     // Make sure the label of the startVertex is 0
