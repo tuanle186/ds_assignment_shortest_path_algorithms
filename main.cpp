@@ -18,30 +18,25 @@ int edgeListGen(int[][3],int,int,int); //Function to generate a random edges lis
 int main() {
 
     string input_file_name = "EdgeList2.txt";
-    char start_vertices = 56;
+    char start_vertices = 84;
 
     // Read from file
-    int edgeList[MAX][3];
-    int numEdges = 0;
-    string line = "";
-    ifstream fin(input_file_name);
+    int edgeList[MAX][3]; // To store the graph
+    int numEdges = 0; // To compute the number of edges (the number of rows)
+    set<int> vertices; // To compute the number of vertices
     int src_vertex, des_vertex, weight;
+    ifstream fin(input_file_name);
     while (fin >> src_vertex >> des_vertex >> weight) {
         edgeList[numEdges][0] = src_vertex;
         edgeList[numEdges][1] = des_vertex;
         edgeList[numEdges][2] = weight;
+        vertices.insert(src_vertex);
+        vertices.insert(des_vertex);
         numEdges++;
     }
     fin.close();
 
-    // Compute the number of vertices
-    set<int> vertices;
-    for (int i = 0; i < numEdges; i++) {
-        vertices.insert(edgeList[i][0]);
-        vertices.insert(edgeList[i][1]);
-    }
     int numVertices = vertices.size();
-
     cout << "Number of edges = " << numEdges << endl;
     cout << "Number of vertices = " << numVertices << endl;
 
@@ -49,7 +44,6 @@ int main() {
     // for (int i = 0; i < numEdges; i++) {
     //     printedge(edgeList[i]);
     // }
-    
 
     // Initialize BFValue and BFPrev with all -1s
     int BFValue[numVertices];

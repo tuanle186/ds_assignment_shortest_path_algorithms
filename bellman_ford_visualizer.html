@@ -178,20 +178,20 @@
         const stepsSection = document.getElementById('stepsSection');
         const resultsSection = document.getElementById('resultsSection');
         const messageArea = document.getElementById('messageArea');
-        const edgeFileIn = document.getElementById('edgeFileIn'); // New file input
-        const uploadFileBtn = document.getElementById('uploadFileBtn'); // New upload button
+        const edgeFileIn = document.getElementById('edgeFileIn'); 
+        const uploadFileBtn = document.getElementById('uploadFileBtn'); 
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             addEdgeBtn.addEventListener('click', handleAddEdge);
-            uploadFileBtn.addEventListener('click', handleFileUpload); // Listener for file upload
+            uploadFileBtn.addEventListener('click', handleFileUpload); 
             runAlgoBtn.addEventListener('click', handleRunBellmanFord);
             clearAllBtn.addEventListener('click', clearAllData);
-            updateEdgesDisplay(); // Initial display for edges list
+            updateEdgesDisplay(); 
         });
 
-        function displayMessage(text, type = 'info') { // Default type to 'info'
-            messageArea.innerHTML = ''; // Clear previous messages
+        function displayMessage(text, type = 'info') { 
+            messageArea.innerHTML = ''; 
             const messageDiv = document.createElement('div');
             messageDiv.textContent = text;
             let bgColor, textColor;
@@ -211,15 +211,13 @@
         }
         
         function addSingleEdge(source, destination, weight) {
-            // This function encapsulates adding a single edge and updating vertices.
-            // It's used by both manual add and file upload.
             if (!source || !destination || isNaN(weight)) {
-                return false; // Indicate failure
+                return false; 
             }
             edges.push({ source, destination, weight });
             vertices.add(source);
             vertices.add(destination);
-            return true; // Indicate success
+            return true; 
         }
 
         function handleAddEdge() {
@@ -246,7 +244,6 @@
                 edgeSourceIn.focus();
                 displayMessage(`Edge ${source} → ${destination} (Weight: ${weight}) added successfully.`, "success");
             } else {
-                // This case should ideally not be reached if previous checks are fine
                 displayMessage("Failed to add edge. Please check inputs.", "error");
             }
         }
@@ -262,15 +259,15 @@
             const reader = new FileReader();
             reader.onload = function(event) {
                 const fileContent = event.target.result;
-                const lines = fileContent.split(/\r?\n/); // Split by new line, handling Windows/Unix
+                const lines = fileContent.split(/\r?\n/); 
                 let edgesAddedCount = 0;
                 let errorsEncountered = [];
 
                 lines.forEach((line, index) => {
                     const trimmedLine = line.trim();
-                    if (trimmedLine === "") return; // Skip empty lines
+                    if (trimmedLine === "") return; 
 
-                    const parts = trimmedLine.split(/\s+/); // Split by one or more spaces
+                    const parts = trimmedLine.split(/\s+/); 
                     if (parts.length === 3) {
                         const source = parts[0];
                         const destination = parts[1];
@@ -291,7 +288,7 @@
                 });
 
                 updateEdgesDisplay();
-                edgeFileIn.value = ''; // Reset file input
+                edgeFileIn.value = ''; 
 
                 if (errorsEncountered.length > 0) {
                     const errorMsg = `Processed file. Added ${edgesAddedCount} edges. Errors on lines: \n${errorsEncountered.join('\n')}`;
@@ -304,14 +301,14 @@
             };
             reader.onerror = function() {
                 displayMessage("Error reading the file.", "error");
-                edgeFileIn.value = ''; // Reset file input
+                edgeFileIn.value = ''; 
             };
             reader.readAsText(file);
         }
 
 
         function updateEdgesDisplay() {
-            edgesListDiv.innerHTML = ''; // Clear current list
+            edgesListDiv.innerHTML = ''; 
             if (edges.length === 0) {
                 edgesListDiv.innerHTML = '<p class="text-gray-500">No edges added yet.</p>';
                 return;
@@ -329,7 +326,7 @@
 
         function logStep(message, type = 'info') {
             const p = document.createElement('p');
-            p.innerHTML = message; // Use innerHTML to render arrows etc.
+            p.innerHTML = message; 
             
             if (type === 'header') p.className = 'log-header';
             else if (type === 'update') p.className = 'log-update';
@@ -361,7 +358,9 @@
                 return { distances, predecessors };
             }
 
-            for (const vertex of vertices) {
+            // Log initial distances for all known vertices
+            const sortedVerticesForLog = Array.from(vertices).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+            for (const vertex of sortedVerticesForLog) {
                  logStep(`dist[${vertex}] = ${distances[vertex] === Infinity ? '&infin;' : distances[vertex]}, pred[${vertex}] = null`, 'info');
             }
             return { distances, predecessors };
@@ -415,10 +414,8 @@
                          logStep(`No update for edge ${u} &rarr; ${v}. (dist[${u}] = ${distances[u] === Infinity ? '&infin;' : distances[u]}, weight = ${w}, dist[${v}] = ${distances[v] === Infinity ? '&infin;' : distances[v]})`, "no-update");
                     }
                 }
-                if (!changedInIteration && i < numVertices - 2) { // Check only if not the last mandatory iteration
+                if (!changedInIteration && i < numVertices - 2) { 
                     logStep("No distances changed in this iteration. Algorithm can terminate early (optional optimization).", "info");
-                    // break; // Standard Bellman-Ford completes all V-1 iterations, but this is a common optimization.
-                           // However, for learning, showing all iterations might be better. Let's keep it running.
                 }
             }
 
@@ -429,8 +426,6 @@
                 if (distances[u] !== Infinity && distances[u] + w < distances[v]) {
                     logStep(`Negative cycle detected! Edge ${u} &rarr; ${v} (weight ${w}) can be further relaxed. (dist[${u}](${distances[u]}) + ${w} < dist[${v}](${distances[v]}))`, "error");
                     negativeCycleDetected = true;
-                    // For a more robust negative cycle path identification, one might need to trace back
-                    // from 'v' or mark 'v' as part of a cycle. For this visualizer, just detecting is key.
                 }
             }
 
@@ -468,7 +463,10 @@
 
         function displayFinalResults(distances, predecessors, negativeCycleDetected) {
             resultsTableBody.innerHTML = ''; 
-            const sortedVertices = Array.from(vertices).sort();
+            // Sort vertices alphanumerically for consistent display
+            const sortedVertices = Array.from(vertices).sort((a, b) => 
+                a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+            );
 
             for (const vertex of sortedVertices) {
                 const tr = document.createElement('tr');
@@ -484,8 +482,7 @@
                 let distDisplay = distances[vertex];
                 if (distDisplay === Infinity) {
                     distDisplay = "&infin;";
-                } else if (negativeCycleDetected && isPotentiallyAffectedByNegativeCycle(vertex, distances, edges, predecessors)) {
-                    // This is a broad indication. True affected nodes would be -Infinity.
+                } else if (negativeCycleDetected && isPotentiallyAffectedByNegativeCycle(vertex, distances)) {
                     distDisplay = `${distances[vertex]} (path may be affected by negative cycle)`;
                     tdDistance.classList.add("text-red-500");
                 }
@@ -496,7 +493,7 @@
                 tdPath.className = 'table-cell';
                 if (distances[vertex] === Infinity) {
                     tdPath.textContent = "No path";
-                } else if (negativeCycleDetected && isPotentiallyAffectedByNegativeCycle(vertex, distances, edges, predecessors)) {
+                } else if (negativeCycleDetected && isPotentiallyAffectedByNegativeCycle(vertex, distances)) {
                      tdPath.textContent = "Path unreliable due to negative cycle";
                      tdPath.classList.add("text-red-500");
                 } else {
@@ -507,13 +504,11 @@
             }
         }
         
-        function isPotentiallyAffectedByNegativeCycle(vertex, distances, allEdges, predecessors) {
-            // This is a simplified check. If a negative cycle is detected globally,
-            // any finite path *could* be part of, or reachable from, such a cycle.
-            // A rigorous approach would involve identifying nodes reachable from the
-            // cycle and setting their distances to -Infinity.
-            // For this visualizer, if a negative cycle exists and the distance isn't Infinity,
-            // we'll flag it as potentially affected.
+        // Simplified check for potential effect of a negative cycle on a vertex's path
+        function isPotentiallyAffectedByNegativeCycle(vertex, distances) {
+            // If a negative cycle is detected globally, and this vertex has a finite shortest path,
+            // it's flagged as potentially affected. A more rigorous check would trace reachability
+            // from the actual cycle.
             return distances[vertex] !== Infinity;
         }
 
@@ -527,7 +522,7 @@
             edgeDestIn.value = '';
             edgeWeightIn.value = '';
             sourceVertexIn.value = '';
-            edgeFileIn.value = ''; // Clear file input
+            edgeFileIn.value = ''; 
             
             updateEdgesDisplay();
             stepsLogDiv.innerHTML = '';
