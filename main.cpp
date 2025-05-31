@@ -23,10 +23,13 @@ int main() {
     // Read from file
     int edgeList[MAX][3];
     int numEdges = 0;
-    string line;
+    string line = "";
     ifstream fin(input_file_name);
-    while (getline(fin, line)) {
-        fin >> edgeList[numEdges][0] >> edgeList[numEdges][1] >> edgeList[numEdges][2];
+    int src_vertex, des_vertex, weight;
+    while (fin >> src_vertex >> des_vertex >> weight) {
+        edgeList[numEdges][0] = src_vertex;
+        edgeList[numEdges][1] = des_vertex;
+        edgeList[numEdges][2] = weight;
         numEdges++;
     }
     fin.close();
@@ -43,11 +46,10 @@ int main() {
     cout << "Number of vertices = " << numVertices << endl;
 
     // Print the edgelist:
-    /*
-    for (int i = 0; i < numEdges; i++) {
-        printedge(edgeList[i]);
-    }
-    */
+    // for (int i = 0; i < numEdges; i++) {
+    //     printedge(edgeList[i]);
+    // }
+    
 
     // Initialize BFValue and BFPrev with all -1s
     int BFValue[numVertices];
@@ -60,8 +62,10 @@ int main() {
     // Run the bellman-ford algorithm
     for (int i = 0; i < numVertices; i++) BF(edgeList, numEdges, start_vertices, BFValue, BFPrev);
 
+    cout << "BFValue: ";
     for (int i = 0; i < numVertices; i++) cout << BFValue[i] << ", ";
     cout << endl;
+    cout << "BFPrev: ";
     for (int i = 0; i < numVertices; i++) cout << BFPrev[i] << ", ";
 
     return 0;
@@ -71,7 +75,7 @@ int main() {
 
 //support function definition 
 void printedge(int edge[]){
-    cout << char(edge[0]) << ", " << char(edge[1]) << ", " << edge[2] << endl;
+    cout << (edge[0]) << ", " << (edge[1]) << ", " << edge[2] << endl;
 }
 
 int edgeListGen(int edgeList[][3],int numEdges,int numVertices,int initlimit=1){
