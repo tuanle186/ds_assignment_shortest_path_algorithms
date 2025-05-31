@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bellman-Ford Algorithm Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .log-header { font-weight: bold; margin-top: 8px; color: #1d4ed8; } /* blue-700 */
+        .log-info { margin-left: 16px; color: #52525b; } /* zinc-600 */
+        .log-update { margin-left: 16px; color: #16a34a; } /* green-600 */
+        .log-no-update { margin-left: 16px; color: #71717a; } /* zinc-500 */
+        .log-error { margin-left: 16px; color: #dc2626; font-weight: bold; } /* red-600 */
+        .result-item { margin-bottom: 4px; }
+        .table-header { background-color: #f3f4f6; font-weight: bold; } /* gray-100 */
+        .table-cell { padding: 8px; border: 1px solid #e5e7eb; } /* gray-200 */
+        input[type="text"], input[type="number"], input[type="file"] {
+            border-color: #d1d5db; /* gray-300 */
+        }
+        input[type="text"]:focus, input[type="number"]:focus, input[type="file"]:focus {
+            border-color: #2563eb; /* blue-600 */
+            box-shadow: 0 0 0 1px #2563eb; /* blue-600 */
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background-color: #2563eb; /* blue-600 */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #1d4ed8; /* blue-700 */
+        }
+        .btn-secondary {
+            background-color: #ef4444; /* red-500 */
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #dc2626; /* red-600 */
+        }
+        .btn-neutral {
+            background-color: #6b7280; /* gray-500 */
+            color: white;
+        }
+        .btn-neutral:hover {
+            background-color: #4b5563; /* gray-600 */
+        }
+        /* Custom scrollbar for steps log */
+        #stepsLogDiv::-webkit-scrollbar {
+            width: 8px;
+        }
+        #stepsLogDiv::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        #stepsLogDiv::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        #stepsLogDiv::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+    <div class="container mx-auto max-w-5xl bg-white p-6 md:p-8 rounded-xl shadow-xl">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-blue-700">Bellman-Ford Algorithm Visualizer</h1>
+            <p class="text-gray-600 mt-2">Learn and test the Bellman-Ford algorithm for shortest paths in a directed graph.</p>
+        </header>
+
+        <section class="mb-8 p-6 bg-gray-50 rounded-lg shadow">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Graph Setup</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <h3 class="text-xl font-medium text-gray-700 mb-3">Add Edge Manually</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label for="edgeSourceIn" class="block text-sm font-medium text-gray-700">Source Vertex:</label>
+                            <input type="text" id="edgeSourceIn" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" placeholder="e.g., A or 1">
+                        </div>
+                        <div>
+                            <label for="edgeDestIn" class="block text-sm font-medium text-gray-700">Destination Vertex:</label>
+                            <input type="text" id="edgeDestIn" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" placeholder="e.g., B or 2">
+                        </div>
+                        <div>
+                            <label for="edgeWeightIn" class="block text-sm font-medium text-gray-700">Weight:</label>
+                            <input type="number" id="edgeWeightIn" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" placeholder="e.g., 5 or -2">
+                        </div>
+                        <button id="addEdgeBtn" class="w-full btn btn-primary">Add Edge</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-medium text-gray-700 mb-3">Current Edges</h3>
+                    <div id="edgesListDiv" class="h-48 overflow-y-auto bg-white p-3 rounded-md border border-gray-300 text-sm">
+                        <p class="text-gray-500">No edges added yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 pt-6">
+                <h3 class="text-xl font-medium text-gray-700 mb-3">Upload Edge List (.txt)</h3>
+                <p class="text-sm text-gray-600 mb-2">File format: Each line `source destination weight` (space-separated).</p>
+                <div class="space-y-3">
+                    <div>
+                        <label for="edgeFileIn" class="block text-sm font-medium text-gray-700">Select .txt file:</label>
+                        <input type="file" id="edgeFileIn" accept=".txt" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    </div>
+                    <button id="uploadFileBtn" class="w-full md:w-auto btn btn-neutral">Upload File</button>
+                </div>
+            </div>
+
+
+            <div class="mt-8 border-t border-gray-200 pt-6">
+                <label for="sourceVertexIn" class="block text-sm font-medium text-gray-700">Source Vertex for Shortest Path:</label>
+                <input type="text" id="sourceVertexIn" class="mt-1 block w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2" placeholder="Enter a vertex name from your graph">
+            </div>
+            <div class="mt-6 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                <button id="runAlgoBtn" class="flex-1 btn btn-primary">Run Bellman-Ford</button>
+                <button id="clearAllBtn" class="flex-1 btn btn-secondary">Clear All Data</button>
+            </div>
+        </section>
+
+        <div id="messageArea" class="mb-6"></div>
+
+        <section id="stepsSection" class="mb-8 p-6 bg-gray-50 rounded-lg shadow hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Algorithm Steps</h2>
+            <div id="stepsLogDiv" class="h-64 overflow-y-auto bg-white p-4 rounded-md border border-gray-300 text-sm">
+                </div>
+        </section>
+
+        <section id="resultsSection" class="p-6 bg-gray-50 rounded-lg shadow hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Results</h2>
+            <div id="resultsCycleDiv" class="mb-4 text-lg font-medium"></div>
+            <div>
+                <h3 class="text-xl font-medium text-gray-700 mb-2">Shortest Distances & Paths:</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full border-collapse border border-gray-300">
+                        <thead>
+                            <tr class="table-header">
+                                <th class="table-cell text-left">Vertex</th>
+                                <th class="table-cell text-left">Distance</th>
+                                <th class="table-cell text-left">Path</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Global state
+        let edges = [];
+        let vertices = new Set();
+        let sourceVertex = null; // The source for Bellman-Ford
+
+        // DOM Elements
+        const edgeSourceIn = document.getElementById('edgeSourceIn');
+        const edgeDestIn = document.getElementById('edgeDestIn');
+        const edgeWeightIn = document.getElementById('edgeWeightIn');
+        const addEdgeBtn = document.getElementById('addEdgeBtn');
+        const edgesListDiv = document.getElementById('edgesListDiv');
+        const sourceVertexIn = document.getElementById('sourceVertexIn');
+        const runAlgoBtn = document.getElementById('runAlgoBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const stepsLogDiv = document.getElementById('stepsLogDiv');
+        const resultsTableBody = document.getElementById('resultsTableBody');
+        const resultsCycleDiv = document.getElementById('resultsCycleDiv');
+        const stepsSection = document.getElementById('stepsSection');
+        const resultsSection = document.getElementById('resultsSection');
+        const messageArea = document.getElementById('messageArea');
+        const edgeFileIn = document.getElementById('edgeFileIn'); // New file input
+        const uploadFileBtn = document.getElementById('uploadFileBtn'); // New upload button
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            addEdgeBtn.addEventListener('click', handleAddEdge);
+            uploadFileBtn.addEventListener('click', handleFileUpload); // Listener for file upload
+            runAlgoBtn.addEventListener('click', handleRunBellmanFord);
+            clearAllBtn.addEventListener('click', clearAllData);
+            updateEdgesDisplay(); // Initial display for edges list
+        });
+
+        function displayMessage(text, type = 'info') { // Default type to 'info'
+            messageArea.innerHTML = ''; // Clear previous messages
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = text;
+            let bgColor, textColor;
+            if (type === 'error') {
+                bgColor = 'bg-red-100'; textColor = 'text-red-700';
+            } else if (type === 'success') {
+                bgColor = 'bg-green-100'; textColor = 'text-green-700';
+            } else { // info
+                bgColor = 'bg-blue-100'; textColor = 'text-blue-700';
+            }
+            messageDiv.className = `p-3 rounded-md text-sm ${bgColor} ${textColor}`;
+            messageArea.appendChild(messageDiv);
+        }
+
+        function clearMessages() {
+            messageArea.innerHTML = '';
+        }
+        
+        function addSingleEdge(source, destination, weight) {
+            // This function encapsulates adding a single edge and updating vertices.
+            // It's used by both manual add and file upload.
+            if (!source || !destination || isNaN(weight)) {
+                return false; // Indicate failure
+            }
+            edges.push({ source, destination, weight });
+            vertices.add(source);
+            vertices.add(destination);
+            return true; // Indicate success
+        }
+
+        function handleAddEdge() {
+            clearMessages();
+            const source = edgeSourceIn.value.trim();
+            const destination = edgeDestIn.value.trim();
+            const weightStr = edgeWeightIn.value.trim();
+
+            if (!source || !destination || !weightStr) {
+                displayMessage("All edge fields (source, destination, weight) are required.", "error");
+                return;
+            }
+            const weight = parseFloat(weightStr);
+            if (isNaN(weight)) {
+                displayMessage("Edge weight must be a valid number.", "error");
+                return;
+            }
+
+            if (addSingleEdge(source, destination, weight)) {
+                updateEdgesDisplay();
+                edgeSourceIn.value = '';
+                edgeDestIn.value = '';
+                edgeWeightIn.value = '';
+                edgeSourceIn.focus();
+                displayMessage(`Edge ${source} → ${destination} (Weight: ${weight}) added successfully.`, "success");
+            } else {
+                // This case should ideally not be reached if previous checks are fine
+                displayMessage("Failed to add edge. Please check inputs.", "error");
+            }
+        }
+
+        function handleFileUpload() {
+            clearMessages();
+            const file = edgeFileIn.files[0];
+            if (!file) {
+                displayMessage("Please select a .txt file to upload.", "error");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const fileContent = event.target.result;
+                const lines = fileContent.split(/\r?\n/); // Split by new line, handling Windows/Unix
+                let edgesAddedCount = 0;
+                let errorsEncountered = [];
+
+                lines.forEach((line, index) => {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine === "") return; // Skip empty lines
+
+                    const parts = trimmedLine.split(/\s+/); // Split by one or more spaces
+                    if (parts.length === 3) {
+                        const source = parts[0];
+                        const destination = parts[1];
+                        const weight = parseFloat(parts[2]);
+
+                        if (!isNaN(weight)) {
+                            if(addSingleEdge(source, destination, weight)) {
+                                edgesAddedCount++;
+                            } else {
+                                errorsEncountered.push(`Line ${index + 1}: Invalid data for edge (source: ${source}, dest: ${destination}, weight: ${parts[2]})`);
+                            }
+                        } else {
+                            errorsEncountered.push(`Line ${index + 1}: Invalid weight "${parts[2]}"`);
+                        }
+                    } else {
+                        errorsEncountered.push(`Line ${index + 1}: Incorrect format. Expected "source destination weight". Found: "${trimmedLine}"`);
+                    }
+                });
+
+                updateEdgesDisplay();
+                edgeFileIn.value = ''; // Reset file input
+
+                if (errorsEncountered.length > 0) {
+                    const errorMsg = `Processed file. Added ${edgesAddedCount} edges. Errors on lines: \n${errorsEncountered.join('\n')}`;
+                    displayMessage(errorMsg, "error");
+                } else if (edgesAddedCount > 0) {
+                    displayMessage(`Successfully added ${edgesAddedCount} edges from the file.`, "success");
+                } else {
+                    displayMessage("No valid edges found in the file or file was empty.", "info");
+                }
+            };
+            reader.onerror = function() {
+                displayMessage("Error reading the file.", "error");
+                edgeFileIn.value = ''; // Reset file input
+            };
+            reader.readAsText(file);
+        }
+
+
+        function updateEdgesDisplay() {
+            edgesListDiv.innerHTML = ''; // Clear current list
+            if (edges.length === 0) {
+                edgesListDiv.innerHTML = '<p class="text-gray-500">No edges added yet.</p>';
+                return;
+            }
+            const ul = document.createElement('ul');
+            ul.className = 'space-y-1';
+            edges.forEach((edge, index) => {
+                const li = document.createElement('li');
+                li.className = 'p-1 bg-blue-50 rounded-sm';
+                li.textContent = `${index + 1}. ${edge.source} → ${edge.destination} (Weight: ${edge.weight})`;
+                ul.appendChild(li);
+            });
+            edgesListDiv.appendChild(ul);
+        }
+
+        function logStep(message, type = 'info') {
+            const p = document.createElement('p');
+            p.innerHTML = message; // Use innerHTML to render arrows etc.
+            
+            if (type === 'header') p.className = 'log-header';
+            else if (type === 'update') p.className = 'log-update';
+            else if (type === 'error') p.className = 'log-error';
+            else if (type === 'no-update') p.className = 'log-no-update';
+            else p.className = 'log-info';
+            
+            stepsLogDiv.appendChild(p);
+            stepsLogDiv.scrollTop = stepsLogDiv.scrollHeight; 
+        }
+
+        function initializeBellmanFord() {
+            const distances = {};
+            const predecessors = {};
+
+            for (const vertex of vertices) {
+                distances[vertex] = Infinity;
+                predecessors[vertex] = null;
+            }
+            
+            if (vertices.has(sourceVertex)) {
+                distances[sourceVertex] = 0;
+                logStep(`Initialization: Distance to source <strong>${sourceVertex}</strong> set to 0. All others to &infin;.`, "header");
+            } else if (vertices.size > 0) {
+                logStep(`<strong>Error:</strong> Source vertex ${sourceVertex} not found in the graph's vertices. Cannot initialize.`, "error");
+                return { distances: null, predecessors: null }; 
+            } else {
+                logStep(`<strong>Warning:</strong> Graph is empty. No vertices to initialize.`, "info");
+                return { distances, predecessors };
+            }
+
+            for (const vertex of vertices) {
+                 logStep(`dist[${vertex}] = ${distances[vertex] === Infinity ? '&infin;' : distances[vertex]}, pred[${vertex}] = null`, 'info');
+            }
+            return { distances, predecessors };
+        }
+
+        function handleRunBellmanFord() {
+            clearMessages();
+            sourceVertex = sourceVertexIn.value.trim();
+
+            if (edges.length === 0) {
+                displayMessage("Please add at least one edge to the graph.", "error");
+                return;
+            }
+            if (!sourceVertex) {
+                displayMessage("Please specify a source vertex.", "error");
+                return;
+            }
+            if (!vertices.has(sourceVertex)) {
+                displayMessage(`Source vertex "${sourceVertex}" is not in the graph. Add edges involving this vertex or choose an existing one.`, "error");
+                return;
+            }
+
+            stepsLogDiv.innerHTML = ''; 
+            resultsTableBody.innerHTML = ''; 
+            resultsCycleDiv.innerHTML = '';
+            stepsSection.classList.remove('hidden');
+            resultsSection.classList.remove('hidden');
+
+            const numVertices = vertices.size;
+            let { distances, predecessors } = initializeBellmanFord();
+            
+            if (!distances) { 
+                stepsSection.classList.add('hidden');
+                resultsSection.classList.add('hidden');
+                return; 
+            }
+
+            for (let i = 0; i < numVertices - 1; i++) {
+                logStep(`<strong>Iteration ${i + 1} of ${numVertices - 1} (Relaxation Phase)</strong>`, "header");
+                let changedInIteration = false;
+                for (const edge of edges) {
+                    const { source: u, destination: v, weight: w } = edge;
+                    logStep(`Considering edge: ${u} &rarr; ${v} (weight ${w})`, "info");
+                    if (distances[u] !== Infinity && distances[u] + w < distances[v]) {
+                        const oldDistV = distances[v] === Infinity ? '&infin;' : distances[v];
+                        distances[v] = distances[u] + w;
+                        predecessors[v] = u;
+                        changedInIteration = true;
+                        logStep(`Relaxed: dist[${v}] updated from ${oldDistV} to ${distances[v]}. pred[${v}] = ${u}.`, "update");
+                    } else {
+                         logStep(`No update for edge ${u} &rarr; ${v}. (dist[${u}] = ${distances[u] === Infinity ? '&infin;' : distances[u]}, weight = ${w}, dist[${v}] = ${distances[v] === Infinity ? '&infin;' : distances[v]})`, "no-update");
+                    }
+                }
+                if (!changedInIteration && i < numVertices - 2) { // Check only if not the last mandatory iteration
+                    logStep("No distances changed in this iteration. Algorithm can terminate early (optional optimization).", "info");
+                    // break; // Standard Bellman-Ford completes all V-1 iterations, but this is a common optimization.
+                           // However, for learning, showing all iterations might be better. Let's keep it running.
+                }
+            }
+
+            logStep("<strong>Checking for Negative Weight Cycles (Iteration " + numVertices + ")</strong>", "header");
+            let negativeCycleDetected = false;
+            for (const edge of edges) {
+                const { source: u, destination: v, weight: w } = edge;
+                if (distances[u] !== Infinity && distances[u] + w < distances[v]) {
+                    logStep(`Negative cycle detected! Edge ${u} &rarr; ${v} (weight ${w}) can be further relaxed. (dist[${u}](${distances[u]}) + ${w} < dist[${v}](${distances[v]}))`, "error");
+                    negativeCycleDetected = true;
+                    // For a more robust negative cycle path identification, one might need to trace back
+                    // from 'v' or mark 'v' as part of a cycle. For this visualizer, just detecting is key.
+                }
+            }
+
+            if (negativeCycleDetected) {
+                resultsCycleDiv.innerHTML = `<p class="text-red-600 font-semibold">Negative weight cycle detected in the graph. Shortest paths to vertices affected by the cycle are not well-defined (can be infinitely small).</p>`;
+            } else {
+                resultsCycleDiv.innerHTML = `<p class="text-green-600 font-semibold">No negative weight cycles detected.</p>`;
+            }
+
+            displayFinalResults(distances, predecessors, negativeCycleDetected);
+        }
+
+        function reconstructPath(target, predecessors, currentSourceVertex) {
+            const path = [];
+            let current = target;
+            let count = 0;
+            const maxPathLength = vertices.size + 1; 
+
+            while (current !== null && count < maxPathLength) {
+                path.unshift(current);
+                if (current === currentSourceVertex) break; 
+                current = predecessors[current];
+                count++;
+            }
+            
+            if (path.length > 0 && path[0] === currentSourceVertex) { 
+                return path.join(' &rarr; ');
+            } else if (target === currentSourceVertex && distances[target] === 0) { 
+                 return target;
+            } else if (count >= maxPathLength && current !== currentSourceVertex) {
+                 return "Path reconstruction error (cycle or unreachability)";
+            }
+            return "No path"; 
+        }
+
+        function displayFinalResults(distances, predecessors, negativeCycleDetected) {
+            resultsTableBody.innerHTML = ''; 
+            const sortedVertices = Array.from(vertices).sort();
+
+            for (const vertex of sortedVertices) {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-200 hover:bg-gray-50';
+
+                const tdVertex = document.createElement('td');
+                tdVertex.className = 'table-cell';
+                tdVertex.textContent = vertex;
+                tr.appendChild(tdVertex);
+
+                const tdDistance = document.createElement('td');
+                tdDistance.className = 'table-cell';
+                let distDisplay = distances[vertex];
+                if (distDisplay === Infinity) {
+                    distDisplay = "&infin;";
+                } else if (negativeCycleDetected && isPotentiallyAffectedByNegativeCycle(vertex, distances, edges, predecessors)) {
+                    // This is a broad indication. True affected nodes would be -Infinity.
+                    distDisplay = `${distances[vertex]} (path may be affected by negative cycle)`;
+                    tdDistance.classList.add("text-red-500");
+                }
+                tdDistance.innerHTML = distDisplay;
+                tr.appendChild(tdDistance);
+
+                const tdPath = document.createElement('td');
+                tdPath.className = 'table-cell';
+                if (distances[vertex] === Infinity) {
+                    tdPath.textContent = "No path";
+                } else if (negativeCycleDetected && isPotentiallyAffectedByNegativeCycle(vertex, distances, edges, predecessors)) {
+                     tdPath.textContent = "Path unreliable due to negative cycle";
+                     tdPath.classList.add("text-red-500");
+                } else {
+                    tdPath.innerHTML = reconstructPath(vertex, predecessors, sourceVertex);
+                }
+                tr.appendChild(tdPath);
+                resultsTableBody.appendChild(tr);
+            }
+        }
+        
+        function isPotentiallyAffectedByNegativeCycle(vertex, distances, allEdges, predecessors) {
+            // This is a simplified check. If a negative cycle is detected globally,
+            // any finite path *could* be part of, or reachable from, such a cycle.
+            // A rigorous approach would involve identifying nodes reachable from the
+            // cycle and setting their distances to -Infinity.
+            // For this visualizer, if a negative cycle exists and the distance isn't Infinity,
+            // we'll flag it as potentially affected.
+            return distances[vertex] !== Infinity;
+        }
+
+        function clearAllData() {
+            clearMessages();
+            edges = [];
+            vertices.clear();
+            sourceVertex = null;
+            
+            edgeSourceIn.value = '';
+            edgeDestIn.value = '';
+            edgeWeightIn.value = '';
+            sourceVertexIn.value = '';
+            edgeFileIn.value = ''; // Clear file input
+            
+            updateEdgesDisplay();
+            stepsLogDiv.innerHTML = '';
+            resultsTableBody.innerHTML = '';
+            resultsCycleDiv.innerHTML = '';
+            
+            stepsSection.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            
+            displayMessage("All data has been cleared.", "info");
+        }
+
+    </script>
+</body>
+</html>

@@ -15,18 +15,17 @@ void printedge(int[]);
 int edgeListGen(int[][3],int,int,int);
 
 
-
 //main Function
-int main()
-{
+int main() {
     //Function name for checking:
     // enum Func_check {BF,BF_Path,Traveling,none};
     
-    bool randGen=0;
+    bool randGen = 0;
     int edgeList[MAX][3];
-    int numEdges=8;
-    int numVertices=6;
-    int initlimit=15;
+
+    int numEdges = 8;
+    int numVertices = 6;
+    int initlimit = 15;
 
     if (!randGen) {
         //Read from file
@@ -40,39 +39,21 @@ int main()
         if (edgeListGen(edgeList,numEdges,numVertices,initlimit) < 0) return -1;
     }
 
-    //Print the generated edgelist:
+    // Print the generated edgelist:
     // for (int i = 0; i < numEdges; i++) {
     //     printedge(edgeList[i]);
     // }
     
-    /*
-    //Check the chosen function:
-    Func_check func = BF;
-    
-    switch(func){
-        case BF:
-            int BFValue[50];
-            int BFPrev[50];
-            char start_vertices=edgeList[0][0];
-            BF(edgeList,numEdges,start_vertices,BFValue,BFPrev);
-            break;
-        case BF_Path:
-            char start_vertices=edgeList[0][0];
-            char end_vertices=edgeList[numEdges-1][numEdges-1];
-            BF_Path(edgeList,numEdges,start_vertices,end_vertices);
-            break;
-        case Traveling:
-            char start_vertices=edgeList[0][0];
-            Traveling(edgeList,numEdges,start_vertices);
-            break;
-        default: cout<<"no such case";
-    }
-    */
 
-    int BFValue[6] = {-1, -1, -1, -1, -1, -1};
-    int BFPrev[6] = {-1, -1, -1, -1, -1, -1};
-    // char start_vertices=edgeList[0][0];
-    char start_vertices=83;
+    // Initialize BFValue and BFPrev with all -1s
+    int BFValue[numVertices];
+    int BFPrev[numVertices];
+    for (int i = 0; i < numVertices; i++) {
+        BFValue[i] = -1;
+        BFPrev[i] = -1;
+    }
+
+    char start_vertices = 67;
 
     for (int i = 0; i < numVertices; i++) {
         BF(edgeList, numEdges, start_vertices, BFValue, BFPrev);
@@ -85,22 +66,17 @@ int main()
     cout << endl;
 
     for (int i = 0; i < numVertices; i++) {
-        cout << BFPrev[i] << ", ";
+        cout << char(BFPrev[i]) << ", ";
     }
 
     return 0;
-    
 }
-
-
-
-
 
 
 
 //support function definition 
 void printedge(int edge[]){
-    cout<<char(edge[0])<<char(edge[1])<<","<<edge[2]<<endl;
+    cout << char(edge[0]) << ", " << char(edge[1]) << ", " << edge[2] << endl;
 }
 
 int edgeListGen(int edgeList[][3],int numEdges,int numVertices,int initlimit=1){

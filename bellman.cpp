@@ -81,12 +81,7 @@ void BF(int graph[][3], int numEdges, char startVertex, int BFValue[], int BFPre
             }
         }
     }
-
-    for (int i = 0; i < num_unique; i++) {
-        // cout << char(sorted_unique_vertices[i]) << endl;
-        cout << sorted_unique_vertices[i] << endl;
-    }
-
+    
     // 4. Perform the relaxation step
     // Make sure the label of the startVertex is 0
     int startVertexIndex = getVertexIndex(startVertex, sorted_unique_vertices, num_unique);
