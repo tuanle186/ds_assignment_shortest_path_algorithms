@@ -18,7 +18,7 @@ int edgeListGen(int[][3],int,int,int); //Function to generate a random edges lis
 int main() {
 
     string input_file_name = "EdgeList2.txt";
-    char start_vertices = 84;
+    char start_vertices = 87;
 
     // Read from file
     int edgeList[MAX][3]; // To store the graph
