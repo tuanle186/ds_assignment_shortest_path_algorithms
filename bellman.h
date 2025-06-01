@@ -2,6 +2,13 @@
 #define BELLMAN_H
 
 #include <iostream>
+#include <fstream>
+#include <string>
+#include <cmath>
+#include <vector>
+#include <algorithm>
+#include <random>
+#include <set>
 using namespace std;
 
 #define DEBUGGING 1

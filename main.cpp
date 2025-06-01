@@ -18,7 +18,7 @@ int edgeListGen(int[][3],int,int,int); //Function to generate a random edges lis
 int main() {
 
     string input_file_name = "EdgeList2.txt";
-    // char start_vertex = 87;
+    char start_vertex = 67;
 
     // Read from file
     int edgeList[MAX][3]; // To store the graph
@@ -40,13 +40,15 @@ int main() {
     cout << "Number of edges = " << numEdges << endl;
     cout << "Number of vertices = " << numVertices << endl;
 
+
     // Print the edgelist:
     // for (int i = 0; i < numEdges; i++) {
     //     printedge(edgeList[i]);
     // }
 
-    /*
+    
     // Initialize BFValue and BFPrev with all -1s
+    /*
     int BFValue[numVertices];
     int BFPrev[numVertices];
     for (int i = 0; i < numVertices; i++) {
@@ -64,7 +66,8 @@ int main() {
     for (int i = 0; i < numVertices; i++) cout << BFPrev[i] << ", ";
     */
 
-    string bf_path = BF_Path(edgeList, numEdges, 67, 36);
+    
+    string bf_path = BF_Path(edgeList, numEdges, 67, 117);
     cout << "bf_path = " << bf_path << endl;
 
     cout << "bf_path_dec_ver = ";

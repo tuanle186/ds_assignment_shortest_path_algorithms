@@ -1,99 +1,38 @@
 #include "bellman.h"
 
-void bubbleSort(int arr[], int n) {
-    if (arr == nullptr || n <= 1) return;
-    for (int i = 0; i < n - 1; ++i) {
-        for (int j = 0; j < n - i - 1; ++j) {
-            if (arr[j] > arr[j + 1]) {
-                // Swap arr[j] and arr[j+1]
-                int temp = arr[j];
-                arr[j] = arr[j + 1];
-                arr[j + 1] = temp;
-            }
-        }
+
+int getVertexIndex(const int targetVertex, const set<int> listOfSortedVertices) {
+    if (listOfSortedVertices.empty()) return -1;
+    int targetVertexIdx = 0;
+    for (auto vertex : listOfSortedVertices) {
+        // Vertex is unique
+        if (vertex == targetVertex) return targetVertexIdx;
+        targetVertexIdx++;
     }
+    return -1;
 }
 
 
-int getVertexIndex(int vertex, const int sorted_unique_vertices[], int num_unique) {
-    if (sorted_unique_vertices == nullptr) {
-        return -1;
-    }
-
-    // Binary Search
-    int low = 0;
-    int high = num_unique - 1;
-
-    while (low <= high) {
-        int mid = low + (high - low)/2;
-
-        // Check if vertex is present at mid
-        if (sorted_unique_vertices[mid] == vertex) return mid;
-
-        // If vertex is greater than mid, ignore the left half
-        if (sorted_unique_vertices[mid] < vertex) low = mid + 1;
-
-        // If vertex is less than mid, ignore the right half
-        else high = mid - 1;
-    }
-
-    return -1; // Vertex is not found
-}
-
-
-void getSortedUniqueVertices(int graph[][3], int numEdges, int& numUniqueVertices, int*& sortedUniqueVertices) {
-    if (numEdges <= 0) {
-        return;
-    }
-
-    // 1. Collect all vertices from the graph, 
-    int* all_vertices_not_filtered = new int[2 * numEdges]; // maximum number of vertices is 2 * numEdges
-    if (all_vertices_not_filtered == nullptr) { // Failed to allocate memory
-        return; 
-    }
-
-    int vertices_count_not_filtered = 0;
+set<int> getSetOfSortedVertices(int graph[][3], int numEdges) {
+    // Extract unique values, set sorts the elements in ascending order by default
+    set<int> setOfSortedVertices;
     for (int i = 0; i < numEdges; i++) {
-        all_vertices_not_filtered[vertices_count_not_filtered++] = graph[i][0];
-        all_vertices_not_filtered[vertices_count_not_filtered++] = graph[i][1];
+        setOfSortedVertices.insert(graph[i][0]);
+        setOfSortedVertices.insert(graph[i][1]);
     }
-
-    // 2. Sort all collected vertices
-    bubbleSort(all_vertices_not_filtered, vertices_count_not_filtered);
-    
-    // 3. Extract unique sorted labels
-    // The array of unique vertices can't be larger than all_vertices
-    sortedUniqueVertices = new int[vertices_count_not_filtered];
-    if (sortedUniqueVertices == nullptr) {
-        delete[] all_vertices_not_filtered; // Clean up previously allocated memory
-        return; // failed to allocate memory
-    }
-
-    if (vertices_count_not_filtered > 0) {
-        sortedUniqueVertices[numUniqueVertices++] = all_vertices_not_filtered[0];
-        for (int i = 1; i < vertices_count_not_filtered; i++) {
-            if (all_vertices_not_filtered[i] != all_vertices_not_filtered[i - 1]) {
-                sortedUniqueVertices[numUniqueVertices++] = all_vertices_not_filtered[i];
-            }
-        }
-    }
-
-    delete[] all_vertices_not_filtered; // Clean up previously allocated memory
+    return setOfSortedVertices;
 }
 
 
+/* Perform one step of Bellman-Ford
+*/
 void BF(int graph[][3], int numEdges, char startVertex, int BFValue[], int BFPrev[]) {
-    if (numEdges <= 0) {
-        return; // No edges to process
-    }
-
-    int* sortedUniqueVertices;
-    int numUniqueVertices = 0;
-    getSortedUniqueVertices(graph, numEdges, numUniqueVertices, sortedUniqueVertices);
+    if (numEdges <= 0) return; // No edges to process
+   
+    set<int> setOfSortedVertices = getSetOfSortedVertices(graph, numEdges);
     
     // Make sure the label of the startVertex is 0
-    int startVertexIndex = getVertexIndex(startVertex, sortedUniqueVertices, numUniqueVertices);
-    BFValue[startVertexIndex] = 0;
+    BFValue[getVertexIndex(startVertex, setOfSortedVertices)] = 0;
 
     // Start relaxing the edges
     for (int i = 0; i < numEdges; i++) {
@@ -101,8 +40,8 @@ void BF(int graph[][3], int numEdges, char startVertex, int BFValue[], int BFPre
         int v = graph[i][1];
         int weight = graph[i][2];
 
-        int u_idx = getVertexIndex(u, sortedUniqueVertices, numUniqueVertices);
-        int v_idx = getVertexIndex(v, sortedUniqueVertices, numUniqueVertices);
+        int u_idx = getVertexIndex(u, setOfSortedVertices);
+        int v_idx = getVertexIndex(v, setOfSortedVertices);
 
         if (BFValue[u_idx] != -1) {
             if ((BFValue[u_idx] + weight < BFValue[v_idx]) || (BFValue[v_idx] == -1)) {
@@ -111,9 +50,6 @@ void BF(int graph[][3], int numEdges, char startVertex, int BFValue[], int BFPre
             }
         }
     }
-
-    // Clean up dynamically allocated memory
-    delete[] sortedUniqueVertices;
 }
 
 
@@ -136,62 +72,33 @@ string BF_Path(int graph[][3], int numEdges, char startVertex, char goalVertex) 
     if (numEdges <= 0) return ""; // No edges to process
     else if (startVertex == goalVertex) return string(1, startVertex);
 
-    int* sortedUniqueVertices;
-    int numUniqueVertices = 0;
-    getSortedUniqueVertices(graph, numEdges, numUniqueVertices, sortedUniqueVertices);
+    set<int> setOfSortedVertices = getSetOfSortedVertices(graph, numEdges);
+    int numVertices = setOfSortedVertices.size();
 
-    // Initialize BFValue and BFPrev with all -1s
-    int* BFValue = new int[numUniqueVertices];
-    int* BFPrev = new int[numUniqueVertices];
-    for (int i = 0; i < numUniqueVertices; i++) {
+    // Initialize and fill BFValue and BFPrev with all -1s
+    int* BFValue = new int[numVertices];
+    int* BFPrev = new int[numVertices];
+    for (int i = 0; i < numVertices; i++) {
         BFValue[i] = -1;
         BFPrev[i] = -1;
     }
 
-    int BFValueTmp[numUniqueVertices];
-    for (int i = 0; i < numUniqueVertices - 1; i++)
+    // The input weights of the testcases will all be positive => no need to check for negative cycles
+    for (int i = 0; i < numVertices - 1; i++) 
         BF(graph, numEdges, startVertex, BFValue, BFPrev);
 
-    #if DEBUGGING
-    printBFValue(BFValue, numUniqueVertices);
-    printBFPrev(BFPrev, numUniqueVertices);
-    #endif
-
-    //
-    // int goalVertexInt = static_cast<int>(goalVertex); // Assuming ASCII/direct mapping
-    // int goalVertexIdx = getVertexIndex(goalVertexInt, sortedUniqueVertices, numUniqueVertices);
-
-    // if (goalVertexIdx == -1 || BFValue[goalVertexIdx] == -1 /* or infinity representation */) {
-    //     // Clean up allocated memory before returning
-    //     delete[] sortedUniqueVertices;
-    //     delete[] BFValue;
-    //     delete[] BFPrev;
-    //     return ""; // Or "Path not found" or an appropriate indicator
-    // }
-    //
-
+    // Start constructing BF path
     string bf_path = "";
-    bf_path = bf_path + goalVertex;
-    int startVertexIdx = getVertexIndex(startVertex, sortedUniqueVertices, numUniqueVertices);
-    int goalVertexIdx = getVertexIndex(goalVertex, sortedUniqueVertices, numUniqueVertices);
-
-    if (BFValue[goalVertexIdx] == -1) {
-        delete[] sortedUniqueVertices;
-        delete[] BFValue;
-        delete[] BFPrev;
-        return "";
+    int currVertex = goalVertex;
+    while (currVertex != startVertex) {
+        bf_path += currVertex;
+        bf_path += ' ';
+        currVertex = BFPrev[getVertexIndex(currVertex, setOfSortedVertices)];
     }
-
-    int currVertexIdx = goalVertexIdx;
-    while (currVertexIdx != startVertexIdx) {
-        char prevVertex = BFPrev[currVertexIdx];
-        bf_path = ' ' + bf_path;
-        bf_path = prevVertex + bf_path;
-        currVertexIdx = getVertexIndex(prevVertex, sortedUniqueVertices, numUniqueVertices);
-    }
+    bf_path += startVertex;
+    reverse(bf_path.begin(), bf_path.end());
 
     // Clean up dynamically allocated memory
-    delete[] sortedUniqueVertices;
     delete[] BFValue;
     delete[] BFPrev;
 
