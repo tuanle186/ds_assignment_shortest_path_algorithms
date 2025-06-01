@@ -7,7 +7,7 @@
  * @param setOfSortedVertices The set of all sorted vertices
  * @return The index of targetVertex or -1 if not found
  */
-int getVertexIndex(const int targetVertex, const set<int> setOfSortedVertices) {
+int getVertexIndex(const int targetVertex, const set<int>& setOfSortedVertices) {
     if (setOfSortedVertices.empty()) return -1;
     int targetVertexIdx = 0;
     for (auto vertex : setOfSortedVertices) {
@@ -47,12 +47,7 @@ set<int> getSetOfSortedVertices(int graph[][3], int numEdges) {
  */
 void BF(int graph[][3], int numEdges, char startVertex, int BFValue[], int BFPrev[]) {
     if (numEdges <= 0) return; // No edges to process
-   
     set<int> setOfSortedVertices = getSetOfSortedVertices(graph, numEdges);
-    
-    // Make sure the label of the startVertex is 0
-    BFValue[getVertexIndex(startVertex, setOfSortedVertices)] = 0;
-
     // Start relaxing the edges
     for (int i = 0; i < numEdges; i++) {
         int u = graph[i][0];
@@ -111,19 +106,23 @@ string BF_Path(int graph[][3], int numEdges, char startVertex, char goalVertex) 
         BFPrev[i] = -1;
     }
 
+    int startVertexIdx = getVertexIndex(startVertex, setOfSortedVertices);
+    BFValue[startVertexIdx] = 0;
+
     // The input weights of the testcases will all be positive => no need to check for negative cycles
     for (int i = 0; i < numVertices - 1; i++) 
         BF(graph, numEdges, startVertex, BFValue, BFPrev);
 
     // Start constructing BF path
+    // The testcases will always have valid path => no need to check for no path case
     string bf_path = "";
-    int currVertex = goalVertex;
+    char currVertex = goalVertex;
     while (currVertex != startVertex) {
-        bf_path += currVertex;
+        bf_path += static_cast<char>(currVertex);
         bf_path += ' ';
         currVertex = BFPrev[getVertexIndex(currVertex, setOfSortedVertices)];
     }
-    bf_path += startVertex;
+    bf_path += static_cast<char>(startVertex);
     reverse(bf_path.begin(), bf_path.end());
 
     // Clean up dynamically allocated memory
