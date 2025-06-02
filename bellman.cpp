@@ -48,6 +48,11 @@ set<int> getSetOfSortedVertices(int graph[][3], int numEdges) {
 void BF(int graph[][3], int numEdges, char startVertex, int BFValue[], int BFPrev[]) {
     if (numEdges <= 0) return; // No edges to process
     set<int> setOfSortedVertices = getSetOfSortedVertices(graph, numEdges);
+
+    // Make sure the distance from the source vertex to itself is always 0
+    int startVertexIdx = getVertexIndex(startVertex, setOfSortedVertices);
+    BFValue[startVertexIdx] = 0;
+
     // Start relaxing the edges
     for (int i = 0; i < numEdges; i++) {
         int u = graph[i][0];

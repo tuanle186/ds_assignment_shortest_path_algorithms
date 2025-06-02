@@ -10,10 +10,11 @@
 using namespace std;
 #define MAX 1000 // maximum number of edges
 
-
 void printEdge(int[]); // Function to print an edge
 void printEdgeList(int edgeList[MAX][3], int numEdges);
 void readFromFile(string fileName, int edgeList[MAX][3], int& numEdges, int& numVertices);
+
+void testCaseBF1(int edgeList[MAX][3], int numEdges, int numVertices, char startVertex);
 void testCaseBFPath1(int edgeList[MAX][3], int numEdges, char startVertex, char goalVertex);
 
 
@@ -27,12 +28,47 @@ int main() {
     cout << "Number of edges: " << numEdges << endl;
     cout << "Number of vertices: " << numVertices << endl;
 
+    cout << "\ntestcaseBF1: ============================\n";
+    testCaseBF1(edgeList,
+                numEdges,
+                numVertices,
+                81);
+
+
+    cout << "\ntestcaseBFPath1: ============================\n";
     testCaseBFPath1(edgeList, 
                     numEdges, 
                     /*startVertex = */ 81, 
                     /*goalVertex =  */118);
     return 0;
 }
+
+
+// -------------------------------------------------------
+// ------------------- BF() testcases---------------------
+// -------------------------------------------------------
+
+void testCaseBF1(int edgeList[MAX][3], int numEdges, int numVertices, char startVertex) {
+    // Initialize BFValue and BFPrev with all -1
+    int* BFValue = new int[numVertices];
+    int* BFPrev = new int[numVertices];
+    for (int i = 0; i < numVertices; i++) {
+        BFValue[i] = -1;
+        BFPrev[i] = -1;
+    }
+    
+    for (int i = 0; i < numVertices - 1; i++) BF(edgeList, numEdges, startVertex, BFValue, BFPrev);
+
+    cout << "BFValue = ";
+    for (int i = 0; i < numVertices; i++) cout << BFValue[i] << ", ";
+    cout << "\nBFPrev = ";
+    for (int i = 0; i < numVertices; i++) cout << BFPrev[i] << ", ";
+}
+
+
+// -------------------------------------------------------
+// ---------------- BF_Path() testcases-------------------
+// -------------------------------------------------------
 
 void testCaseBFPath1(int edgeList[MAX][3], int numEdges, char startVertex, char goalVertex) {
     string bf_path = BF_Path(edgeList, numEdges, startVertex, goalVertex);
@@ -45,7 +81,10 @@ void testCaseBFPath1(int edgeList[MAX][3], int numEdges, char startVertex, char 
     }
 }
 
+
+// -------------------------------------------------------
 // ------------------------ Utils ------------------------ 
+// -------------------------------------------------------
 
 void readFromFile(string fileName, int edgeList[MAX][3], int& numEdges, int& numVertices) {
     numEdges = 0;
