@@ -20,7 +20,7 @@ void testCaseBFPath2(int edgeList[MAX][3], int numEdges);
 
 
 int main() {
-    string input_file_name = "EdgeList3.txt";
+    string input_file_name = "./edgeLists/EdgeList3.txt";
 
     int edgeList[MAX][3], numEdges, numVertices;
     readFromFile(input_file_name, edgeList, numEdges, numVertices);
