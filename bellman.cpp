@@ -113,6 +113,11 @@ string BF_Path(int graph[][3], int numEdges, char startVertex, char goalVertex) 
     for (int i = 0; i < numVertices - 1; i++) 
         BF(graph, numEdges, startVertex, BFValue, BFPrev);
 
+    /*
+    printBFValue(BFValue, numVertices);
+    printBFPrev(BFPrev, numVertices);
+    */
+
     // Start constructing BF path
     // The testcases will always have valid path => no need to check for no path case
     string bf_path = "";
