@@ -7,6 +7,7 @@
 #include <random>
 #include <set>
 #include "bellman.h"
+#include "tsm.h"
 using namespace std;
 #define MAX 1000 // maximum number of edges
 
@@ -17,6 +18,7 @@ void readFromFile(string fileName, int edgeList[MAX][3], int& numEdges, int& num
 void testCaseBF1(int edgeList[MAX][3], int numEdges, int numVertices);
 void testCaseBFPath1(int edgeList[MAX][3], int numEdges);
 void testCaseBFPath2(int edgeList[MAX][3], int numEdges);
+void testCaseTraveling1();
 
 
 int main() {
@@ -37,6 +39,9 @@ int main() {
 
     cout << "\ntestcaseBFPath2: ============================\n";
     testCaseBFPath2(edgeList, numEdges);
+
+    cout << "\ntestcaseTraveling1: ============================\n";
+    testCaseTraveling1();
     return 0;
 }
 
@@ -87,6 +92,25 @@ void testCaseBFPath2(int edgeList[MAX][3], int numEdges) {
             else cout << int(bf_path[i]);
         }
     }
+}
+
+// -------------------------------------------------------
+// ---------------- BF_Path() testcases-------------------
+// -------------------------------------------------------
+
+void testCaseTraveling1() {
+    // Example 1: A simple triangle A-B-C
+    // A=65, B=66, C=67 (ASCII values)
+    int graph1[][3] = {
+        {65, 66, 10}, // A-B, weight 10
+        {66, 67, 20}, // B-C, weight 20
+        {67, 65, 30}  // C-A, weight 30
+    };
+    int numEdges1 = 3;
+    char startVertex1 = 'A';
+    std::cout << "Test Case 1:" << std::endl;
+    Traveling(graph1, numEdges1, startVertex1); 
+    // Expected: A -> B -> C -> A, Cost: 10+20+30 = 60 (or A->C->B->A if that's shorter - no, this is fixed)
 }
 
 
