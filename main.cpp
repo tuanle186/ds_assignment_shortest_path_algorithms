@@ -118,7 +118,7 @@ void testCaseTraveling1() {
 }
 
 void testCaseTraveling2(int graph[][3], int numEdges) {
-    Traveling(graph, numEdges, 'A');
+    Traveling(graph, numEdges, 'M');
 }
 
 

@@ -23,6 +23,7 @@ vector<vector<int>> initAndPopulateAdjMatrix(const int graph[][3],
 
 /**
  * Calculate the shortest way to go over all the vertices in the graph and go back to the starting vertex.
+ * usnig the dynamic programming approach (Help-Karp)
  * @param graph
  * @param numEdges
  * @param startVertex
@@ -50,9 +51,7 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
     vector<vector<int>> parent(numMasks, vector<int>(numVertices, -1));
 
     int startVertexIdx = getVertexIndex(startVertex, setOfSortedVertices);
-    
     dp[1 << startVertexIdx][startVertexIdx] = 0LL;
-
     for (int mask = 1; mask < numMasks; mask++) {
         for (int i = 0; i < numVertices; i++) { // 'i' is the current end-vertex index
             if (mask & (1 << i)) { 
@@ -94,7 +93,7 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
 
     // 3. Output and Path Reconstruction
     if (min_total_cost == -1LL || last_vertex_in_tour == -1) {
-        // cout << "No Hamiltonian cycle found" << endl;
+        // cout << "No Hamiltonian cycle found" << endl; // debug
     } else {
         vector<int> tour_nodes_intermediate_indices; 
         int current_vertex_recon_idx = last_vertex_in_tour;
@@ -107,7 +106,7 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
             if (current_vertex_recon_idx == -1 || 
                 (parent[current_mask_recon][current_vertex_recon_idx] == -1 && 
                  !(current_vertex_recon_idx == startVertexIdx && current_mask_recon == (1 << startVertexIdx))) ) {
-                // cerr << "Error in path reconstruction: Invalid parent." << endl;
+                // cout << "Error in path reconstruction: Invalid parent." << endl; // debug
                 min_total_cost = -1LL; 
                 break;
             }
@@ -119,14 +118,14 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
             current_vertex_recon_idx = prev_vertex_recon_idx;
             
             if (tour_nodes_intermediate_indices.size() > static_cast<size_t>(numVertices) + 1) { 
-                // cerr << "Error in path reconstruction: Path too long." << endl;
+                // cout << "Error in path reconstruction: Path too long." << endl; // debug
                 min_total_cost = -1LL; 
                 break;
             }
         }
         
         if (min_total_cost == -1LL) { 
-            // cout << "No Hamiltonian cycle found" << endl;
+            // cout << "No Hamiltonian cycle found" << endl; // debug
         } else {
             cout << startVertex; // Print original start character
             reverse(tour_nodes_intermediate_indices.begin(), tour_nodes_intermediate_indices.end());
