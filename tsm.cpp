@@ -19,16 +19,10 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
     // Handle base cases
     if (numVertices <= 0) return; // There is no vertices in the graph
 
-    if (numVertices == 1) {
-        cout << "Path: " << startVertex << " -> " << startVertex << endl;
-        cout << "Cost: 0" << endl;
-        return;
-    }
-
     // Initialize the adjacency matrix
     vector<vector<int>> adjMatrix(numVertices, vector<int>(numVertices, -1));
 
-    // Cost from a vertex to itself is always 0 -> All values on the diagonal are 0
+    // Cost from a vertex to itself is always 0 => All values on the diagonal are 0
     for (int i = 0; i < numVertices; i++) adjMatrix[i][i] = 0;
 
     // Populate the adjacency matrix
@@ -43,12 +37,13 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
         adjMatrix[u_idx][v_idx] = weight;
     }
 
-    // 3. Perform the TSP algorithm (Held-Karp)
+    // Perform the TSP algorithm (Held-Karp)
+
     // shift left number 1 by numVertices positions e.g 1 << 3 = 8 ('0001' -> '1000')
     int numMasks = 1 << numVertices;
 
     vector<vector<long long>> dp(numMasks, vector<long long>(numVertices, -1LL));
-    vector<vector<int>> parent (numMasks, vector<int>(numVertices, -1));
+    vector<vector<int>> parent(numMasks, vector<int>(numVertices, -1));
 
     int startVertexIdx = getVertexIndex(startVertex, setOfSortedVertices);
     
@@ -95,7 +90,7 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
 
     // Output and Path Reconstruction
     if (min_total_cost == -1LL || last_vertex_in_tour == -1) {
-        cout << "No Hamiltonian cycle found" << endl;
+        // cout << "No Hamiltonian cycle found" << endl;
     } else {
         vector<int> tour_nodes_intermediate_indices; 
         int current_vertex_recon_idx = last_vertex_in_tour;
@@ -108,7 +103,7 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
             if (current_vertex_recon_idx == -1 || 
                 (parent[current_mask_recon][current_vertex_recon_idx] == -1 && 
                  !(current_vertex_recon_idx == startVertexIdx && current_mask_recon == (1 << startVertexIdx))) ) {
-                cerr << "Error in path reconstruction: Invalid parent." << endl;
+                // cerr << "Error in path reconstruction: Invalid parent." << endl;
                 min_total_cost = -1LL; 
                 break;
             }
@@ -120,25 +115,24 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
             current_vertex_recon_idx = prev_vertex_recon_idx;
             
             if (tour_nodes_intermediate_indices.size() > static_cast<size_t>(numVertices) + 1) { 
-                cerr << "Error in path reconstruction: Path too long." << endl;
+                // cerr << "Error in path reconstruction: Path too long." << endl;
                 min_total_cost = -1LL; 
                 break;
             }
         }
         
         if (min_total_cost == -1LL) { 
-            cout << "No Hamiltonian cycle found" << endl;
+            // cout << "No Hamiltonian cycle found" << endl;
         } else {
-            cout << "Path: " << startVertex; // Print original start character
+            cout << startVertex; // Print original start character
             reverse(tour_nodes_intermediate_indices.begin(), tour_nodes_intermediate_indices.end());
             
-            for(int node_idx : tour_nodes_intermediate_indices) {
-                // **FIXED PRINTING:** Cast integer code from map to char
-                cout << " -> " << static_cast<char>(idxToVertexMap[node_idx]);
+            for (int node_idx : tour_nodes_intermediate_indices) {
+                cout << " " << static_cast<char>(idxToVertexMap[node_idx]);
             }
             // Print return to start vertex (original char)
-            cout << " -> " << startVertex << endl;
-            cout << "Cost: " << min_total_cost << endl;
+            cout << " " << startVertex << endl;
+            // cout << "Cost: " << min_total_cost << endl; // debug
         }
     }
 }
