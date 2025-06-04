@@ -1,5 +1,25 @@
 #include "tsm.h"
 
+vector<vector<int>> initAndPopulateAdjMatrix(const int graph[][3], 
+                                             const set<int>& setOfSortedVertices, 
+                                             const int& numEdges, 
+                                             const int& numVertices) 
+{
+    vector<vector<int>> adjMatrix(numVertices, vector<int>(numVertices, -1));
+    // Cost from a vertex to itself is always 0 => All values on the diagonal are 0
+    for (int i = 0; i < numVertices; i++) adjMatrix[i][i] = 0;
+    // Populate the adjacency matrix
+    for (int i = 0; i < numEdges; i++) {
+        int u = graph[i][0];
+        int v = graph[i][1];
+        int weight = graph[i][2];
+        int u_idx = getVertexIndex(u, setOfSortedVertices);
+        int v_idx = getVertexIndex(v, setOfSortedVertices);
+        adjMatrix[u_idx][v_idx] = weight;
+    }
+    return adjMatrix;
+}
+
 
 /**
  * Calculate the shortest way to go over all the vertices in the graph and go back to the starting vertex.
@@ -9,7 +29,7 @@
  * @return Print the shortest path over all the vertices and return to the starting vertex.
  */
 void Traveling(int graph[][3], int numEdges, char startVertex) {    
-    // Collect all unique vertices
+    // 1. Initialization
     set<int> setOfSortedVertices = getSetOfSortedVertices(graph, numEdges);
     int numVertices = setOfSortedVertices.size();
 
@@ -20,25 +40,9 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
     if (numVertices <= 0) return; // There is no vertices in the graph
 
     // Initialize the adjacency matrix
-    vector<vector<int>> adjMatrix(numVertices, vector<int>(numVertices, -1));
+    vector<vector<int>> adjMatrix = initAndPopulateAdjMatrix(graph, setOfSortedVertices, numEdges, numVertices);
 
-    // Cost from a vertex to itself is always 0 => All values on the diagonal are 0
-    for (int i = 0; i < numVertices; i++) adjMatrix[i][i] = 0;
-
-    // Populate the adjacency matrix
-    for (int i = 0; i < numEdges; i++) {
-        int u = graph[i][0];
-        int v = graph[i][1];
-        int weight = graph[i][2];
-        
-        int u_idx = getVertexIndex(u, setOfSortedVertices);
-        int v_idx = getVertexIndex(v, setOfSortedVertices);
-        
-        adjMatrix[u_idx][v_idx] = weight;
-    }
-
-    // Perform the TSP algorithm (Held-Karp)
-
+    // 2. Perform the TSP algorithm (Held-Karp)
     // shift left number 1 by numVertices positions e.g 1 << 3 = 8 ('0001' -> '1000')
     int numMasks = 1 << numVertices;
 
@@ -88,7 +92,7 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
         }
     }
 
-    // Output and Path Reconstruction
+    // 3. Output and Path Reconstruction
     if (min_total_cost == -1LL || last_vertex_in_tour == -1) {
         // cout << "No Hamiltonian cycle found" << endl;
     } else {
