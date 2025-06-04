@@ -1,7 +1,6 @@
 #include "tsm.h"
 
 
-
 /**
  * Calculate the shortest way to go over all the vertices in the graph and go back to the starting vertex.
  * @param graph
@@ -9,87 +8,137 @@
  * @param startVertex
  * @return Print the shortest path over all the vertices and return to the starting vertex.
  */
-void Traveling(int graph[][3], int numEdges, char startVertex) {
-    if (numEdges <= 0) return;
-    
+void Traveling(int graph[][3], int numEdges, char startVertex) {    
+    // Collect all unique vertices
     set<int> setOfSortedVertices = getSetOfSortedVertices(graph, numEdges);
     int numVertices = setOfSortedVertices.size();
 
-    for (auto vertice : setOfSortedVertices) {
-        cout << vertice << ", ";
+    vector<int> idxToVertexMap;
+    for (char v_char : setOfSortedVertices) idxToVertexMap.push_back(v_char);
+
+    // Handle base cases
+    if (numVertices <= 0) return; // There is no vertices in the graph
+
+    if (numVertices == 1) {
+        cout << "Path: " << startVertex << " -> " << startVertex << endl;
+        cout << "Cost: 0" << endl;
+        return;
     }
 
-    cout << "\nnumEdges = " << numEdges;
-    cout << "\nnumVertices = " << numVertices;
+    // Initialize the adjacency matrix
+    vector<vector<int>> adjMatrix(numVertices, vector<int>(numVertices, -1));
 
+    // Cost from a vertex to itself is always 0 -> All values on the diagonal are 0
+    for (int i = 0; i < numVertices; i++) adjMatrix[i][i] = 0;
+
+    // Populate the adjacency matrix
+    for (int i = 0; i < numEdges; i++) {
+        int u = graph[i][0];
+        int v = graph[i][1];
+        int weight = graph[i][2];
+        
+        int u_idx = getVertexIndex(u, setOfSortedVertices);
+        int v_idx = getVertexIndex(v, setOfSortedVertices);
+        
+        adjMatrix[u_idx][v_idx] = weight;
+    }
+
+    // 3. Perform the TSP algorithm (Held-Karp)
+    // shift left number 1 by numVertices positions e.g 1 << 3 = 8 ('0001' -> '1000')
+    int numMasks = 1 << numVertices;
+
+    vector<vector<long long>> dp(numMasks, vector<long long>(numVertices, -1LL));
+    vector<vector<int>> parent (numMasks, vector<int>(numVertices, -1));
+
+    int startVertexIdx = getVertexIndex(startVertex, setOfSortedVertices);
     
+    dp[1 << startVertexIdx][startVertexIdx] = 0LL;
+
+    for (int mask = 1; mask < numMasks; mask++) {
+        for (int i = 0; i < numVertices; i++) { // 'i' is the current end-vertex index
+            if (mask & (1 << i)) { 
+                if (dp[mask][i] != -1LL) { 
+                    for (int j = 0; j < numVertices; j++) { // 'j' is the next vertex index
+                        if (!(mask & (1 << j)) && adjMatrix[i][j] != -1) {
+                            int next_mask = mask | (1 << j);
+                            long long edge_weight = adjMatrix[i][j];
+                            long long new_cost = dp[mask][i] + edge_weight;
+
+                            if (dp[next_mask][j] == -1LL || new_cost < dp[next_mask][j]) {
+                                dp[next_mask][j] = new_cost;
+                                parent[next_mask][j] = i; 
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Find minimum tour cost
+    long long min_total_cost = -1LL; // Using -1LL as INF for long long
+    int last_vertex_in_tour = -1; 
+
+    int final_mask = numMasks - 1; 
+
+    for (int i = 0; i < numVertices; ++i) {
+        if (dp[final_mask][i] != -1LL && adjMatrix[i][startVertexIdx] != -1) {
+            long long cost_to_return = adjMatrix[i][startVertexIdx];
+            long long current_tour_cost = dp[final_mask][i] + cost_to_return;
+            
+            if (min_total_cost == -1LL || current_tour_cost < min_total_cost) {
+                min_total_cost = current_tour_cost;
+                last_vertex_in_tour = i;
+            }
+        }
+    }
+
+    // Output and Path Reconstruction
+    if (min_total_cost == -1LL || last_vertex_in_tour == -1) {
+        cout << "No Hamiltonian cycle found" << endl;
+    } else {
+        vector<int> tour_nodes_intermediate_indices; 
+        int current_vertex_recon_idx = last_vertex_in_tour;
+        int current_mask_recon = final_mask;
+
+        while (true) {
+            if (current_vertex_recon_idx == startVertexIdx && current_mask_recon == (1 << startVertexIdx)) {
+                break; 
+            }
+            if (current_vertex_recon_idx == -1 || 
+                (parent[current_mask_recon][current_vertex_recon_idx] == -1 && 
+                 !(current_vertex_recon_idx == startVertexIdx && current_mask_recon == (1 << startVertexIdx))) ) {
+                cerr << "Error in path reconstruction: Invalid parent." << endl;
+                min_total_cost = -1LL; 
+                break;
+            }
+
+            tour_nodes_intermediate_indices.push_back(current_vertex_recon_idx);
+            
+            int prev_vertex_recon_idx = parent[current_mask_recon][current_vertex_recon_idx];
+            current_mask_recon ^= (1 << current_vertex_recon_idx); 
+            current_vertex_recon_idx = prev_vertex_recon_idx;
+            
+            if (tour_nodes_intermediate_indices.size() > static_cast<size_t>(numVertices) + 1) { 
+                cerr << "Error in path reconstruction: Path too long." << endl;
+                min_total_cost = -1LL; 
+                break;
+            }
+        }
+        
+        if (min_total_cost == -1LL) { 
+            cout << "No Hamiltonian cycle found" << endl;
+        } else {
+            cout << "Path: " << startVertex; // Print original start character
+            reverse(tour_nodes_intermediate_indices.begin(), tour_nodes_intermediate_indices.end());
+            
+            for(int node_idx : tour_nodes_intermediate_indices) {
+                // **FIXED PRINTING:** Cast integer code from map to char
+                cout << " -> " << static_cast<char>(idxToVertexMap[node_idx]);
+            }
+            // Print return to start vertex (original char)
+            cout << " -> " << startVertex << endl;
+            cout << "Cost: " << min_total_cost << endl;
+        }
+    }
 }
-
-
-
-/*
-int main() {
-    // Example 1: A simple triangle A-B-C
-    // A=65, B=66, C=67 (ASCII values)
-    int graph1[][3] = {
-        {65, 66, 10}, // A-B, weight 10
-        {66, 67, 20}, // B-C, weight 20
-        {67, 65, 30}  // C-A, weight 30
-    };
-    int numEdges1 = 3;
-    char startVertex1 = 'A';
-    std::cout << "Test Case 1:" << std::endl;
-    Traveling(graph1, numEdges1, startVertex1); // Expected: A -> B -> C -> A, Cost: 10+20+30 = 60 (or A->C->B->A if that's shorter - no, this is fixed)
-
-    std::cout << "\nTest Case 2: (A->B->C->A: 10+5+12=27), (A->C->B->A: 8+5+7=20)" << std::endl;
-    int graph2[][3] = {
-        {'A', 'B', 7}, 
-        {'B', 'C', 5}, 
-        {'C', 'A', 8}
-    };
-    Traveling(graph2, 3, 'A'); // Expected: A -> C -> B -> A Cost 20
-
-
-    std::cout << "\nTest Case 3: Four vertices" << std::endl;
-    int graph3[][3] = {
-        {'A', 'B', 10}, {'A', 'C', 15}, {'A', 'D', 20},
-        {'B', 'C', 35}, {'B', 'D', 25},
-        {'C', 'D', 30}
-    };
-    Traveling(graph3, 6, 'A'); 
-    // Possible paths:
-    // A-B-C-D-A = 10+35+30+20 = 95
-    // A-B-D-C-A = 10+25+30+15 = 80
-    // A-C-B-D-A = 15+35+25+20 = 95 (No, A-C then C-B then B-D then D-A) A(15)C(35)B(25)D(20)A = 95
-    // A-C-D-B-A = 15+30+25+10 = 80
-    // A-D-B-C-A = 20+25+35+15 = 95
-    // A-D-C-B-A = 20+30+35+10 = 95
-    // Expected path A->B->D->C->A (cost 80) or A->C->D->B->A (cost 80)
-
-    std::cout << "\nTest Case 4: Single Vertex" << std::endl;
-    int graph4[][3] = {}; // No edges
-    Traveling(graph4, 0, 'Z'); // Expected: Z -> Z, Cost: 0
-
-    std::cout << "\nTest Case 5: Disconnected start vertex" << std::endl;
-    int graph5[][3] = {
-        {'X', 'Y', 5} 
-    };
-    Traveling(graph5, 1, 'A'); // Expected: No Hamiltonian cycle found
-
-    std::cout << "\nTest Case 6: No path possible" << std::endl;
-     int graph6[][3] = {
-        {'A', 'B', 1},
-        // C is isolated from A and B after A is chosen as start
-    };
-    Traveling(graph6, 1, 'A'); // A, B, C. Start A. Other {B,C}. Path A->B, B->C?, C->A?
-                                // If C is not in edges, it becomes a vertex through startVertexChar if start='C'
-                                // If start='A', vertices A, B. Path A->B->A cost 1+1=2. Oh, adjMatrix will have B-A=INF.
-                                // This needs more thought on disconnected.
-                                // If vertices are A,B from edges, and start is C. Then unique_vertex_chars_set = {A,B,C}
-                                // adjMatrix[C_int][anything] = INF. So, no path.
-                                // If start is 'A', vertices are A,B. Path A->B->A (adj[B][A] is INF, as only A-B given)
-                                // This would print "No Hamiltonian cycle found" for A-B edge, start A. Correct.
-
-    return 0;
-}
-*/

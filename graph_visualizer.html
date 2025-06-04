@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weighted Directed Graph Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none; /* Prevents pull-to-refresh on mobile */
+        }
+        canvas {
+            background-color: #f0f0f0; /* Light gray background for canvas */
+            border-radius: 0.5rem; /* Rounded corners for canvas */
+            display: block; /* Remove extra space below canvas */
+        }
+        /* Ensure full height for layout */
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .canvas-container {
+            flex-grow: 1;
+            min-height: 300px; /* Minimum height for the canvas */
+        }
+        textarea {
+            min-height: 100px; /* Minimum height for textarea */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 flex flex-col min-h-screen">
+
+    <header class="bg-slate-800 text-white p-4 shadow-md">
+        <h1 class="text-2xl font-semibold text-center">Weighted Directed Graph Visualizer</h1>
+    </header>
+
+    <main class="main-content container mx-auto p-4 flex flex-col items-center w-full">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl mb-6">
+            <div class="mb-4">
+                <label for="graphDataInput" class="block text-sm font-medium text-slate-700 mb-2">Paste Graph Data:</label>
+                <textarea id="graphDataInput" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="65 66 10&#10;66 67 5&#10;67 65 12"></textarea>
+            </div>
+            <button id="visualizeButton" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out">
+                Visualize Graph
+            </button>
+            <p id="instructions" class="text-xs text-slate-600 mt-4 mb-2">
+                Paste graph data above. Each line represents an edge: <code>source_ASCII destination_ASCII weight</code> (e.g., "65 66 10" for A &rarr; B with weight 10).
+                Node IDs should be ASCII decimal values (e.g., 65 for 'A'). Weights should be numbers.
+            </p>
+            <div id="messageInfo" class="text-sm text-blue-600 p-3 bg-blue-50 rounded-md min-h-[50px] mt-4">
+                Please paste your graph data and click "Visualize Graph".
+            </div>
+        </div>
+
+        <div class="canvas-container w-full max-w-3xl bg-white p-2 rounded-lg shadow-lg">
+            <canvas id="graphCanvas"></canvas>
+        </div>
+    </main>
+
+    <footer class="text-center p-4 text-sm text-slate-600 mt-auto">
+        Graph Visualizer &copy; 2025
+    </footer>
+
+    <script>
+        const graphDataInput = document.getElementById('graphDataInput');
+        const visualizeButton = document.getElementById('visualizeButton');
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const messageInfo = document.getElementById('messageInfo');
+        // const instructions = document.getElementById('instructions'); // Referenced in HTML
+
+        let nodes = []; // Array of { id: 'char', x: 0, y: 0, radius: 15 }
+        let edges = []; // Array of { source: 'char', target: 'char', weight: 0 }
+        
+        const NODE_RADIUS = 20;
+        const ARROW_LENGTH = 12;
+        const ARROW_WIDTH_DEGREES = 25; // Angle for arrowhead wings
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const style = getComputedStyle(container);
+            const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+            const paddingY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+
+            canvas.width = container.clientWidth - paddingX;
+            canvas.height = container.clientHeight - paddingY;
+            
+            if (nodes.length > 0 || edges.length > 0) {
+                drawGraph();
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.font = "16px Inter";
+                ctx.fillStyle = "#64748b"; // slate-500
+                ctx.textAlign = "center";
+                ctx.fillText("Graph will be displayed here.", canvas.width / 2, canvas.height / 2);
+            }
+        }
+
+        visualizeButton.addEventListener('click', () => {
+            const data = graphDataInput.value;
+            if (!data.trim()) {
+                messageInfo.textContent = 'Textarea is empty. Please paste your graph data.';
+                messageInfo.className = "text-sm text-yellow-600 p-3 bg-yellow-50 rounded-md min-h-[50px]";
+                nodes = []; 
+                edges = [];
+                drawGraph(); 
+                return;
+            }
+            try {
+                parseGraphData(data);
+                if (nodes.length === 0 && edges.length === 0 && data.trim() !== "") {
+                     messageInfo.textContent = 'Parsed data resulted in an empty graph. Please check your input format (expecting ASCII values for nodes).';
+                     messageInfo.className = "text-sm text-yellow-600 p-3 bg-yellow-50 rounded-md min-h-[50px]";
+                } else if (nodes.length > 0 || edges.length > 0) {
+                    messageInfo.textContent = `Graph visualized: ${nodes.length} nodes, ${edges.length} edges.`;
+                    messageInfo.className = "text-sm text-green-600 p-3 bg-green-50 rounded-md min-h-[50px]";
+                } else { 
+                     messageInfo.textContent = 'No graph data to display. Please check your input.';
+                     messageInfo.className = "text-sm text-blue-600 p-3 bg-blue-50 rounded-md min-h-[50px]";
+                }
+                drawGraph();
+            } catch (error) {
+                nodes = [];
+                edges = [];
+                messageInfo.textContent = `Error parsing data: ${error.message}`;
+                messageInfo.className = "text-sm text-red-600 p-3 bg-red-50 rounded-md min-h-[50px]";
+                ctx.clearRect(0, 0, canvas.width, canvas.height); 
+                drawGraph(); 
+            }
+        });
+
+        function parseGraphData(data) {
+            const lines = data.trim().split('\n').filter(line => line.trim() !== '');
+            const newNodes = new Map(); 
+            const newEdges = [];
+
+            if (data.trim() === "" && lines.length === 0) {
+                nodes = [];
+                edges = [];
+                return; 
+            }
+
+            lines.forEach((line, index) => {
+                const parts = line.trim().split(/\s+/); 
+                if (parts.length !== 3) {
+                    throw new Error(`Line ${index + 1}: Invalid format. Expected "source_ASCII_value target_ASCII_value weight". Found: "${line}"`);
+                }
+                const [sourceAsciiStr, targetAsciiStr, weightStr] = parts;
+                
+                const sourceAscii = parseInt(sourceAsciiStr);
+                const targetAscii = parseInt(targetAsciiStr);
+                const weight = parseFloat(weightStr);
+
+                if (isNaN(sourceAscii)) {
+                    throw new Error(`Line ${index + 1}: Invalid source ASCII value "${sourceAsciiStr}". Must be a number.`);
+                }
+                if (isNaN(targetAscii)) {
+                    throw new Error(`Line ${index + 1}: Invalid target ASCII value "${targetAsciiStr}". Must be a number.`);
+                }
+                // Optional: Add range check for ASCII values if desired (e.g., printable characters)
+                // if (sourceAscii < 32 || sourceAscii > 126) { ... }
+
+                if (isNaN(weight)) {
+                    throw new Error(`Line ${index + 1}: Invalid weight "${weightStr}". Weight must be a number.`);
+                }
+
+                const sourceId = String.fromCharCode(sourceAscii);
+                const targetId = String.fromCharCode(targetAscii);
+
+                if (!sourceId.trim() || !targetId.trim()) { // Check if conversion resulted in empty or whitespace-only char
+                     throw new Error(`Line ${index + 1}: Resulting character for source or target node ID is empty or invalid (ASCII: ${sourceAsciiStr}, ${targetAsciiStr}).`);
+                }
+
+                if (!newNodes.has(sourceId)) newNodes.set(sourceId, { id: sourceId, radius: NODE_RADIUS });
+                if (!newNodes.has(targetId)) newNodes.set(targetId, { id: targetId, radius: NODE_RADIUS });
+                
+                newEdges.push({ source: sourceId, target: targetId, weight: weight });
+            });
+
+            nodes = Array.from(newNodes.values());
+            edges = newEdges;
+
+            if (nodes.length === 0 && edges.length > 0) { 
+                throw new Error("Edges found but no valid nodes could be parsed. Check ASCII values for nodes.");
+            }
+             if (nodes.length === 0 && lines.length > 0) {
+                throw new Error("No nodes parsed from the input. Ensure format is correct: 'source_ASCII target_ASCII weight' per line and ASCII values are valid.");
+            }
+        }
+
+        function calculateNodePositions() {
+            if (nodes.length === 0) return;
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const baseRadius = Math.min(canvas.width, canvas.height) * 0.35;
+            const dynamicRadiusFactor = Math.min(1 + nodes.length * 0.02, 1.5); 
+            const layoutRadius = baseRadius * dynamicRadiusFactor;
+
+            nodes.forEach((node, i) => {
+                if (nodes.length === 1) {
+                    node.x = centerX;
+                    node.y = centerY;
+                } else {
+                    const angle = (i / nodes.length) * 2 * Math.PI - (Math.PI / 2); 
+                    node.x = centerX + layoutRadius * Math.cos(angle);
+                    node.y = centerY + layoutRadius * Math.sin(angle);
+                }
+            });
+        }
+
+        function drawGraph() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (nodes.length === 0) { 
+                 ctx.font = "16px Inter";
+                 ctx.fillStyle = "#64748b"; 
+                 ctx.textAlign = "center";
+                 if (graphDataInput.value.trim() && !messageInfo.textContent.toLowerCase().includes("error")) {
+                     ctx.fillText("No graph to display from the provided data.", canvas.width / 2, canvas.height / 2);
+                 } else if (!messageInfo.textContent.toLowerCase().includes("error")) {
+                     ctx.fillText("Graph will be displayed here.", canvas.width / 2, canvas.height / 2);
+                 }
+                 return;
+            }
+
+            calculateNodePositions();
+
+            const nodeMap = new Map(nodes.map(n => [n.id, n]));
+
+            // Draw Edges
+            ctx.strokeStyle = '#4b5563'; 
+            ctx.fillStyle = '#4b5563'; 
+            ctx.lineWidth = 1.5;
+            
+            edges.forEach(edge => {
+                const sourceNode = nodeMap.get(edge.source);
+                const targetNode = nodeMap.get(edge.target);
+
+                if (!sourceNode || !targetNode) {
+                    console.warn(`Skipping edge: cannot find source "${edge.source}" (ASCII: ${edge.source.charCodeAt(0)}) or target "${edge.target}" (ASCII: ${edge.target.charCodeAt(0)}) node.`);
+                    return;
+                }
+
+                const sx = sourceNode.x;
+                const sy = sourceNode.y;
+                let tx = targetNode.x;
+                let ty = targetNode.y;
+
+                const dx = tx - sx;
+                const dy = ty - sy;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist === 0) { // Self-loop
+                    const loopRadius = NODE_RADIUS * 0.8;
+                    const loopAngleOffset = -Math.PI / 4; 
+                    const loopCenterX = sx + (NODE_RADIUS + loopRadius) * Math.cos(loopAngleOffset);
+                    const loopCenterY = sy + (NODE_RADIUS + loopRadius) * Math.sin(loopAngleOffset);
+                    
+                    ctx.beginPath();
+                    ctx.arc(loopCenterX, loopCenterY, loopRadius, Math.PI * 0.35, Math.PI * 0.15, false); 
+                    ctx.stroke();
+                    
+                    const arrowTipAngle = Math.PI * 0.15; 
+                    const arrowTipX = loopCenterX + loopRadius * Math.cos(arrowTipAngle);
+                    const arrowTipY = loopCenterY + loopRadius * Math.sin(arrowTipAngle);
+                    drawArrowhead(ctx, arrowTipX, arrowTipY, arrowTipAngle + Math.PI / 2);
+
+                    ctx.fillStyle = '#1f2937'; 
+                    ctx.font = '12px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(edge.weight, loopCenterX + (loopRadius + 10) * Math.cos(loopAngleOffset), loopCenterY + (loopRadius + 10) * Math.sin(loopAngleOffset));
+
+                } else {
+                    const ratio = (dist - targetNode.radius) / dist;
+                    const endX = sx + dx * ratio;
+                    const endY = sy + dy * ratio;
+
+                    ctx.beginPath();
+                    ctx.moveTo(sx, sy);
+                    ctx.lineTo(endX, endY);
+                    ctx.stroke();
+
+                    const angle = Math.atan2(dy, dx);
+                    drawArrowhead(ctx, endX, endY, angle);
+                    
+                    ctx.fillStyle = '#1f2937'; 
+                    ctx.font = '12px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    const midX = sx + dx * 0.5;
+                    const midY = sy + dy * 0.5;
+                    const offsetX = Math.sin(angle) * 10; 
+                    const offsetY = -Math.cos(angle) * 10;
+                    ctx.fillText(edge.weight, midX + offsetX, midY + offsetY);
+                }
+            });
+
+            // Draw Nodes
+            nodes.forEach(node => {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
+                ctx.fillStyle = '#3b82f6'; 
+                ctx.fill();
+                ctx.strokeStyle = '#1e40af'; 
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = 'white';
+                ctx.font = `bold ${node.radius * 0.8}px Inter`; 
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.id, node.x, node.y); // node.id is now the character
+            });
+        }
+
+        function drawArrowhead(context, x, y, angle) {
+            context.save();
+            context.beginPath();
+            context.translate(x, y);
+            context.rotate(angle);
+            context.moveTo(0, 0);
+            context.lineTo(-ARROW_LENGTH, ARROW_LENGTH * Math.tan(ARROW_WIDTH_DEGREES * Math.PI / 180 / 2));
+            context.lineTo(-ARROW_LENGTH, -ARROW_LENGTH * Math.tan(ARROW_WIDTH_DEGREES * Math.PI / 180 / 2));
+            context.closePath();
+            context.fill();
+            context.restore();
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        document.addEventListener('DOMContentLoaded', () => {
+            resizeCanvas(); 
+        });
+
+    </script>
+</body>
+</html>

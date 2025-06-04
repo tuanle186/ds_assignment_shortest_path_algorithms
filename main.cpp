@@ -19,10 +19,11 @@ void testCaseBF1(int edgeList[MAX][3], int numEdges, int numVertices);
 void testCaseBFPath1(int edgeList[MAX][3], int numEdges);
 void testCaseBFPath2(int edgeList[MAX][3], int numEdges);
 void testCaseTraveling1();
+void testCaseTraveling2(int graph[][3], int numEdges);
 
 
 int main() {
-    string input_file_name = "./edgeLists/EdgeList3.txt";
+    string input_file_name = "./edgeLists/EdgeList4.txt";
 
     int edgeList[MAX][3], numEdges, numVertices;
     readFromFile(input_file_name, edgeList, numEdges, numVertices);
@@ -31,17 +32,20 @@ int main() {
     cout << "Number of edges: " << numEdges << endl;
     cout << "Number of vertices: " << numVertices << endl;
 
-    cout << "\ntestcaseBF1: ============================\n";
-    testCaseBF1(edgeList, numEdges, numVertices);
+    // cout << "\ntestcaseBF1: ============================\n";
+    // testCaseBF1(edgeList, numEdges, numVertices);
 
-    cout << "\ntestcaseBFPath1: ============================\n";
-    testCaseBFPath1(edgeList, numEdges);
+    // cout << "\ntestcaseBFPath1: ============================\n";
+    // testCaseBFPath1(edgeList, numEdges);
 
-    cout << "\ntestcaseBFPath2: ============================\n";
-    testCaseBFPath2(edgeList, numEdges);
+    // cout << "\ntestcaseBFPath2: ============================\n";
+    // testCaseBFPath2(edgeList, numEdges);
 
-    cout << "\ntestcaseTraveling1: ============================\n";
-    testCaseTraveling1();
+    // cout << "\ntestcaseTraveling1: ============================\n";
+    // testCaseTraveling1();
+
+    cout << "\ntestcaseTraveling2: ============================\n";
+    testCaseTraveling2(edgeList, numEdges);
     return 0;
 }
 
@@ -102,15 +106,19 @@ void testCaseTraveling1() {
     // Example 1: A simple triangle A-B-C
     // A=65, B=66, C=67 (ASCII values)
     int graph1[][3] = {
-        {65, 66, 10}, // A-B, weight 10
-        {66, 67, 20}, // B-C, weight 20
-        {67, 65, 30}  // C-A, weight 30
+        {65, 66, 10}, // A->B, weight 10
+        {66, 67, 20}, // B->C, weight 20
+        {67, 65, 30}  // C->A, weight 30
     };
     int numEdges1 = 3;
     char startVertex1 = 'A';
     std::cout << "Test Case 1:" << std::endl;
     Traveling(graph1, numEdges1, startVertex1); 
     // Expected: A -> B -> C -> A, Cost: 10+20+30 = 60 (or A->C->B->A if that's shorter - no, this is fixed)
+}
+
+void testCaseTraveling2(int graph[][3], int numEdges) {
+    Traveling(graph, numEdges, 'B');
 }
 
 
