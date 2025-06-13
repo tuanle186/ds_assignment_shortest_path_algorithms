@@ -1,7 +1,7 @@
 #include "tsm.h"
 
 vector<vector<int>> initAndPopulateAdjMatrix(const int graph[][3], 
-                                             const set<int>& setOfSortedVertices, 
+                                             const vector<int>& sortedVertices, 
                                              const int& numEdges, 
                                              const int& numVertices) 
 {
@@ -13,8 +13,8 @@ vector<vector<int>> initAndPopulateAdjMatrix(const int graph[][3],
         int u = graph[i][0];
         int v = graph[i][1];
         int weight = graph[i][2];
-        int u_idx = getVertexIndex(u, setOfSortedVertices);
-        int v_idx = getVertexIndex(v, setOfSortedVertices);
+        int u_idx = getVertexIndex(u, sortedVertices);
+        int v_idx = getVertexIndex(v, sortedVertices);
         adjMatrix[u_idx][v_idx] = weight;
     }
     return adjMatrix;
@@ -31,17 +31,17 @@ vector<vector<int>> initAndPopulateAdjMatrix(const int graph[][3],
  */
 void Traveling(int graph[][3], int numEdges, char startVertex) {    
     // 1. Initialization
-    set<int> setOfSortedVertices = getSetOfSortedVertices(graph, numEdges);
-    int numVertices = setOfSortedVertices.size();
+    vector<int> sortedVertices = getSortedVertices(graph, numEdges);
+    int numVertices = sortedVertices.size();
 
     vector<int> idxToVertexMap;
-    for (char v_char : setOfSortedVertices) idxToVertexMap.push_back(v_char);
+    for (char v_char : sortedVertices) idxToVertexMap.push_back(v_char);
 
     // Handle base cases
     if (numVertices <= 0) return; // There is no vertices in the graph
 
     // Initialize the adjacency matrix
-    vector<vector<int>> adjMatrix = initAndPopulateAdjMatrix(graph, setOfSortedVertices, numEdges, numVertices);
+    vector<vector<int>> adjMatrix = initAndPopulateAdjMatrix(graph, sortedVertices, numEdges, numVertices);
 
     // 2. Perform the TSP algorithm (Held-Karp)
     // shift left number 1 by numVertices positions e.g 1 << 3 = 8 ('0001' -> '1000')
@@ -50,7 +50,7 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
     vector<vector<long long>> dp(numMasks, vector<long long>(numVertices, -1LL));
     vector<vector<int>> parent(numMasks, vector<int>(numVertices, -1));
 
-    int startVertexIdx = getVertexIndex(startVertex, setOfSortedVertices);
+    int startVertexIdx = getVertexIndex(startVertex, sortedVertices);
     dp[1 << startVertexIdx][startVertexIdx] = 0LL;
     for (int mask = 1; mask < numMasks; mask++) {
         for (int i = 0; i < numVertices; i++) { // 'i' is the current end-vertex index

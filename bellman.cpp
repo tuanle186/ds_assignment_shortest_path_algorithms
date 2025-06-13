@@ -7,13 +7,9 @@
  * @param setOfSortedVertices The set of all sorted vertices
  * @return The index of targetVertex or -1 if not found
  */
-int getVertexIndex(const int targetVertex, const set<int>& setOfSortedVertices) {
-    if (setOfSortedVertices.empty()) return -1;
-    int targetVertexIdx = 0;
-    for (auto vertex : setOfSortedVertices) {
-        // Vertex is unique
-        if (vertex == targetVertex) return targetVertexIdx;
-        targetVertexIdx++;
+int getVertexIndex(const int targetVertex, const vector<int>& sortedVertices) {
+    for (int i = 0; i < static_cast<int>(sortedVertices.size()); ++i) {
+        if (sortedVertices[i] == targetVertex) return i;
     }
     return -1;
 }
@@ -25,14 +21,15 @@ int getVertexIndex(const int targetVertex, const set<int>& setOfSortedVertices) 
  * @param numEdges The number of edges in the graph
  * @return The set of sorted vertices
  */
-set<int> getSetOfSortedVertices(int graph[][3], int numEdges) {
-    // Extract unique values, set sorts the elements in ascending order by default
-    set<int> setOfSortedVertices;
-    for (int i = 0; i < numEdges; i++) {
-        setOfSortedVertices.insert(graph[i][0]);
-        setOfSortedVertices.insert(graph[i][1]);
+vector<int> getSortedVertices(int graph[][3], int numEdges) {
+    vector<int> vertices;
+    for (int i = 0; i < numEdges; ++i) {
+        vertices.push_back(graph[i][0]);
+        vertices.push_back(graph[i][1]);
     }
-    return setOfSortedVertices;
+    sort(vertices.begin(), vertices.end());
+    vertices.erase(unique(vertices.begin(), vertices.end()), vertices.end());
+    return vertices;
 }
 
 
@@ -46,21 +43,19 @@ set<int> getSetOfSortedVertices(int graph[][3], int numEdges) {
  * @param BFPrev Current Bellman-Ford Previous array (to be updated)
  */
 void BF(int graph[][3], int numEdges, char startVertex, int BFValue[], int BFPrev[]) {
-    if (numEdges <= 0) return; // No edges to process
-    set<int> setOfSortedVertices = getSetOfSortedVertices(graph, numEdges);
+    if (numEdges <= 0) return;
+    vector<int> sortedVertices = getSortedVertices(graph, numEdges);
 
-    // Make sure the distance from the source vertex to itself is always 0
-    int startVertexIdx = getVertexIndex(startVertex, setOfSortedVertices);
+    int startVertexIdx = getVertexIndex(startVertex, sortedVertices);
     BFValue[startVertexIdx] = 0;
 
-    // Start relaxing the edges
-    for (int i = 0; i < numEdges; i++) {
+    for (int i = 0; i < numEdges; ++i) {
         int u = graph[i][0];
         int v = graph[i][1];
         int weight = graph[i][2];
 
-        int u_idx = getVertexIndex(u, setOfSortedVertices);
-        int v_idx = getVertexIndex(v, setOfSortedVertices);
+        int u_idx = getVertexIndex(u, sortedVertices);
+        int v_idx = getVertexIndex(v, sortedVertices);
 
         if (BFValue[u_idx] != -1) {
             if ((BFValue[u_idx] + weight < BFValue[v_idx]) || (BFValue[v_idx] == -1)) {
@@ -75,13 +70,13 @@ void BF(int graph[][3], int numEdges, char startVertex, int BFValue[], int BFPre
 #if DEBUGGING
 void printBFValue(int BFValue[], int n) {
     cout << "BFValue: ";
-    for (int i = 0; i < n; i++) cout << BFValue[i] << ", ";
+    for (int i = 0; i < n; ++i) cout << BFValue[i] << ", ";
     cout << endl;
 }
 
 void printBFPrev(int BFPrev[], int n) {
     cout << "BFPrev: ";
-    for (int i = 0; i < n; i++) cout << BFPrev[i] << ", ";
+    for (int i = 0; i < n; ++i) cout << BFPrev[i] << ", ";
     cout << endl;
 }
 #endif
@@ -97,45 +92,35 @@ void printBFPrev(int BFPrev[], int n) {
  * @return A string containing the shortest path from Start vertex to Goal vertex
  */
 string BF_Path(int graph[][3], int numEdges, char startVertex, char goalVertex) {
-    if (numEdges <= 0) return ""; // No edges to process
-    else if (startVertex == goalVertex) return string(1, startVertex);
+    if (numEdges <= 0) return "";
+    if (startVertex == goalVertex) return string(1, startVertex);
 
-    set<int> setOfSortedVertices = getSetOfSortedVertices(graph, numEdges);
-    int numVertices = setOfSortedVertices.size();
+    vector<int> sortedVertices = getSortedVertices(graph, numEdges);
+    int numVertices = sortedVertices.size();
 
-    // Initialize and fill BFValue and BFPrev with all -1s
     int* BFValue = new int[numVertices];
     int* BFPrev = new int[numVertices];
-    for (int i = 0; i < numVertices; i++) {
+    for (int i = 0; i < numVertices; ++i) {
         BFValue[i] = -1;
         BFPrev[i] = -1;
     }
 
-    int startVertexIdx = getVertexIndex(startVertex, setOfSortedVertices);
+    int startVertexIdx = getVertexIndex(startVertex, sortedVertices);
     BFValue[startVertexIdx] = 0;
 
-    // The input weights of the testcases will all be positive => no need to check for negative cycles
-    for (int i = 0; i < numVertices - 1; i++) 
+    for (int i = 0; i < numVertices - 1; ++i) 
         BF(graph, numEdges, startVertex, BFValue, BFPrev);
 
-    /*
-    printBFValue(BFValue, numVertices);
-    printBFPrev(BFPrev, numVertices);
-    */
-
-    // Start constructing BF path
-    // The testcases will always have valid path => no need to check for no path case
     string bf_path = "";
     char currVertex = goalVertex;
     while (currVertex != startVertex) {
-        bf_path += static_cast<char>(currVertex);
+        bf_path += currVertex;
         bf_path += ' ';
-        currVertex = BFPrev[getVertexIndex(currVertex, setOfSortedVertices)];
+        currVertex = BFPrev[getVertexIndex(currVertex, sortedVertices)];
     }
-    bf_path += static_cast<char>(startVertex);
+    bf_path += startVertex;
     reverse(bf_path.begin(), bf_path.end());
 
-    // Clean up dynamically allocated memory
     delete[] BFValue;
     delete[] BFPrev;
 
