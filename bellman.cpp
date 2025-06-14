@@ -99,7 +99,7 @@ void BF(int graph[][3],
     // Check if this is the 1st step
     int startVertexIdx = getVertexIndex(startVertex, vertices);
     if (startVertexIdx == -1) {
-        BFPrev[n - 1] = 0;
+        BFValue[startVertexIdx] = 0;
         return;
     }
     

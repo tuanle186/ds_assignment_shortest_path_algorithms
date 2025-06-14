@@ -75,7 +75,7 @@ void testCaseBF2() {
 // -------------------------------------------------------
 
 void testCaseBFPath1(int edgeList[MAX][3], int numEdges) {
-    string bf_path = BF_Path(edgeList, numEdges, 81, 118);
+    string bf_path = BF_Path(edgeList, numEdges, '5', 'a');
     cout << "bf_path = " << bf_path << "\nbf_path_dec_ver = ";
     for (size_t i = 0; i < bf_path.length(); ++i)
         if (bf_path[i] != ' ')
@@ -186,7 +186,7 @@ int main() {
     testCaseBF1(edgeList1, numEdges1, numVertices1);
     cout << "\n";
 
-    cout << "[TEST] BF_Path From 81 to 118\n";
+    cout << "[TEST] BF_Path From '5' to 'a'\n";
     cout << "----------------------------------------------------\n";
     testCaseBFPath1(edgeList1, numEdges1);
     cout << "\n";
