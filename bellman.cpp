@@ -99,11 +99,10 @@ void BF(int graph[][3],
     // Check if this is the 1st step
     int startVertexIdx = getVertexIndex(startVertex, vertices);
     if (startVertexIdx == -1) {
-        BFValue[n - 1] = 0;
+        BFPrev[n - 1] = 0;
         return;
     }
-
-
+    
     bool flag = false;
     if (BFValue[startVertexIdx] == -1) { // 1st step
         for (const Edge& e : edges) {
@@ -176,8 +175,8 @@ string BF_Path(int graph[][3], int numEdges, char startVertex, char goalVertex) 
     if (numEdges <= 0) return "";
     if (startVertex == goalVertex) return string(1, startVertex);
 
-    vector<int> sortedVertices = getSortedVertices(graph, numEdges);
-    int numVertices = sortedVertices.size();
+    vector<int> vertices = getSortedVertices(graph, numEdges);
+    int numVertices = vertices.size();
 
     int* BFValue = new int[numVertices];
     int* BFPrev = new int[numVertices];
@@ -186,24 +185,51 @@ string BF_Path(int graph[][3], int numEdges, char startVertex, char goalVertex) 
         BFPrev[i] = -1;
     }
 
-    int startVertexIdx = getVertexIndex(startVertex, sortedVertices);
-    BFValue[startVertexIdx] = 0;
+    int startVertexIdx = getVertexIndex(startVertex, vertices);
+    int goalVertexIdx = getVertexIndex(goalVertex, vertices);
+    // BFValue[startVertexIdx] = 0;
 
     for (int i = 0; i < numVertices - 1; ++i) 
         BF(graph, numEdges, startVertex, BFValue, BFPrev);
 
-    string bf_path = "";
-    char currVertex = goalVertex;
-    while (currVertex != startVertex) {
-        bf_path += currVertex;
-        bf_path += ' ';
-        currVertex = BFPrev[getVertexIndex(currVertex, sortedVertices)];
+    // printBFValue(BFValue, numVertices);
+    // printBFPrev(BFPrev, numVertices);
+
+    // If there's no path
+    if (BFValue[goalVertexIdx] == -1) {
+        delete[] BFValue;
+        delete[] BFPrev;
+        return "";
     }
-    bf_path += startVertex;
-    reverse(bf_path.begin(), bf_path.end());
+
+    // Reconstruct path using indices
+    vector<char> path;
+    int currIdx = goalVertexIdx;
+    while (currIdx != startVertexIdx) {
+        path.push_back(vertices[currIdx]); // Convert index to vertex (char)
+        currIdx = BFPrev[currIdx];
+        if (currIdx == -1) {
+            // In case of a broken path (shouldn't happen if graph is connected)
+            delete[] BFValue;
+            delete[] BFPrev;
+            return "";
+        }
+    }
+    path.push_back(vertices[startVertexIdx]);
+
+    // Reverse and build the string
+    reverse(path.begin(), path.end());
+    string bf_path;
+    for (char ch : path) {
+        bf_path += ch;
+        bf_path += ' ';
+    }
+    bf_path.pop_back(); // Remove trailing space
 
     delete[] BFValue;
     delete[] BFPrev;
+    
 
     return bf_path;
 }
+
