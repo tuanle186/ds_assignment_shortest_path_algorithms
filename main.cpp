@@ -117,7 +117,11 @@ void testCaseBFPath3() {
 // ------------- Traveling Salesman testcases ------------
 // -------------------------------------------------------
 
-void testCaseTraveling1() {
+void testCaseTraveling1(int graph[][3], int numEdges) {
+    Traveling(graph, numEdges, 63);
+}
+
+void testCaseTraveling2() {
     int graph1[][3] = {
         {65, 66, 10},
         {66, 67, 20},
@@ -127,8 +131,8 @@ void testCaseTraveling1() {
     Traveling(graph1, numEdges1, 'A');
 }
 
-void testCaseTraveling2(int graph[][3], int numEdges) {
-    Traveling(graph, numEdges, 63);
+void testCaseTraveling3(int graph[][3], int numEdges) {
+    Traveling(graph, numEdges, 'M');
 }
 
 // -------------------------------------------------------
@@ -167,34 +171,66 @@ void printEdgeList(int edgeList[MAX][3], int numEdges) {
 // -------------------------------------------------------
 
 int main() {
-    string input_file_name = "./edgeLists/input10A.txt";
+    const string input_file_1 = "./edgeLists/input10A.txt";
+    int edgeList1[MAX][3], numEdges1, numVertices1;
+    readFromFile(input_file_1, edgeList1, numEdges1, numVertices1);
 
-    int edgeList[MAX][3], numEdges, numVertices;
-    readFromFile(input_file_name, edgeList, numEdges, numVertices);
+    cout << "====================================================\n";
+    cout << "Input File 1: " << input_file_1 << "\n";
+    cout << "Number of Edges   : " << numEdges1 << "\n";
+    cout << "Number of Vertices: " << numVertices1 << "\n";
+    cout << "====================================================\n\n";
 
-    cout << "Number of edges: " << numEdges << endl;
-    cout << "Number of vertices: " << numVertices << endl;
+    cout << "[TEST] Bellman-Ford Basic\n";
+    cout << "----------------------------------------------------\n";
+    testCaseBF1(edgeList1, numEdges1, numVertices1);
+    cout << "\n";
 
-    cout << "\n[TEST] Bellman-Ford Basic: ============================\n";
-    testCaseBF1(edgeList, numEdges, numVertices);
+    cout << "[TEST] BF_Path From 81 to 118\n";
+    cout << "----------------------------------------------------\n";
+    testCaseBFPath1(edgeList1, numEdges1);
+    cout << "\n";
 
-    cout << "\n[TEST] BF_Path From 81 to 118: ============================\n";
-    testCaseBFPath1(edgeList, numEdges);
+    cout << "[TEST] BF_Path From 81 to 81\n";
+    cout << "----------------------------------------------------\n";
+    testCaseBFPath2(edgeList1, numEdges1);
+    cout << "\n";
 
-    cout << "\n[TEST] BF_Path From 81 to 81: ============================\n";
-    testCaseBFPath2(edgeList, numEdges);
-
-    cout << "\n[TEST] Traveling Salesman Example 1: ============================\n";
-    testCaseTraveling1();
-
-    cout << "\n[TEST] Traveling Salesman Example 2: ============================\n";
-    testCaseTraveling2(edgeList, numEdges);
-
-    cout << "\n[TEST] Bellman-Ford Step LMS: ============================\n";
+    cout << "[TEST] Bellman-Ford Step LMS\n";
+    cout << "----------------------------------------------------\n";
     testCaseBF2();
+    cout << "\n";
 
-    cout << "\n[TEST] BF_Path Character Pair LMS: ============================\n";
+    cout << "[TEST] BF_Path Character Pair LMS\n";
+    cout << "----------------------------------------------------\n";
     testCaseBFPath3();
+    cout << "\n";
 
+    cout << "[TEST] Traveling Salesman Example 1 (LMS)\n";
+    cout << "----------------------------------------------------\n";
+    testCaseTraveling1(edgeList1, numEdges1);
+    cout << "\n";
+
+    const string input_file_2 = "./edgeLists/EdgeList4.txt";
+    int edgeList2[MAX][3], numEdges2, numVertices2;
+    readFromFile(input_file_2, edgeList2, numEdges2, numVertices2);
+
+    cout << "====================================================\n";
+    cout << "Input File 2: " << input_file_2 << "\n";
+    cout << "Number of Edges   : " << numEdges2 << "\n";
+    cout << "Number of Vertices: " << numVertices2 << "\n";
+    cout << "====================================================\n\n";
+
+    cout << "[TEST] Traveling Salesman Example 2 (Simple)\n";
+    cout << "----------------------------------------------------\n";
+    testCaseTraveling2();
+    cout << "\n";
+
+    cout << "[TEST] Traveling Salesman Example 3 (22 vertices)\n";
+    cout << "----------------------------------------------------\n";
+    testCaseTraveling3(edgeList2, numEdges2);
+    cout << "\n";
+
+    cout << "================== END OF TESTS ====================\n";
     return 0;
 }
