@@ -21,9 +21,9 @@ void testCaseBFPath2(int edgeList[MAX][3], int numEdges);
 void testCaseTraveling1();
 void testCaseTraveling2(int graph[][3], int numEdges);
 
-
+/*
 int main() {
-    string input_file_name = "./edgeLists/EdgeList3.txt";
+    string input_file_name = "./edgeLists/input10A.txt";
 
     int edgeList[MAX][3], numEdges, numVertices;
     readFromFile(input_file_name, edgeList, numEdges, numVertices);
@@ -35,17 +35,57 @@ int main() {
     cout << "\ntestcaseBF1: ============================\n";
     testCaseBF1(edgeList, numEdges, numVertices);
 
-    cout << "\ntestcaseBFPath1: ============================\n";
-    testCaseBFPath1(edgeList, numEdges);
+    // cout << "\ntestcaseBFPath1: ============================\n";
+    // testCaseBFPath1(edgeList, numEdges);
 
-    cout << "\ntestcaseBFPath2: ============================\n";
-    testCaseBFPath2(edgeList, numEdges);
+    // cout << "\ntestcaseBFPath2: ============================\n";
+    // testCaseBFPath2(edgeList, numEdges);
 
-    cout << "\ntestcaseTraveling1: ============================\n";
-    testCaseTraveling1();
+    // cout << "\ntestcaseTraveling1: ============================\n";
+    // testCaseTraveling1();
 
-    cout << "\ntestcaseTraveling2: ============================\n";
-    testCaseTraveling2(edgeList, numEdges);
+    // cout << "\ntestcaseTraveling2: ============================\n";
+    // testCaseTraveling2(edgeList, numEdges);
+    return 0;
+}
+    */
+
+int main() {
+    int edgeList[70][3];
+    int numEdges=70;
+    int Esize=10;
+    ifstream fin("./edgeLists/input10A.txt");
+    for (int i = 0; i < numEdges; i++){
+        fin >> edgeList[i][0] >> edgeList[i][1] >> edgeList[i][2];
+    }
+    fin.close();
+
+    char start_vertices;
+    char namelist[] = "?b";
+
+    for (int i = 0; i < 2; i++) {
+        start_vertices = namelist[i];
+        int BFValue[Esize];
+        int BFPrev[Esize];
+        for (int k = 0; k < Esize; k++){
+            BFValue[k] = -1;
+            BFPrev[k] = -1;
+        }
+        cout << "#####" <<endl;
+        
+        for (int j = 0; j < 2; j++){
+            cout << "step:" << j + 1 <<endl;
+            BF(edgeList, numEdges, start_vertices, BFValue, BFPrev);
+            for (int k = 0; k < Esize; k++) {
+                cout << BFValue[k] << " ";
+            }
+            cout << endl;
+            for (int k = 0; k < Esize; k++) {
+                cout << BFPrev[k] << " ";
+            }
+            cout << endl;
+        }
+    }
     return 0;
 }
 
@@ -63,7 +103,7 @@ void testCaseBF1(int edgeList[MAX][3], int numEdges, int numVertices) {
         BFPrev[i] = -1;
     }
     
-    for (int i = 0; i < numVertices - 1; i++) BF(edgeList, numEdges, /*startVertex=*/81, BFValue, BFPrev);
+    for (int i = 0; i < numVertices - 1; i++) BF(edgeList, numEdges, /*startVertex=*/'?', BFValue, BFPrev);
 
     cout << "BFValue = ";
     for (int i = 0; i < numVertices; i++) cout << BFValue[i] << ", ";

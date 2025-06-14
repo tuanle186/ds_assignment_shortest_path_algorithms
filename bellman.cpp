@@ -33,6 +33,36 @@ vector<int> getSortedVertices(int graph[][3], int numEdges) {
 }
 
 
+struct Edge {
+    int start;
+    int goal;
+    int weight;
+};
+
+/**
+ * Build a vector<Edge> from the raw `graph` array.
+ */
+static void buildEdgeList(int graph[][3], int numEdges, vector<Edge>& edges) {
+    edges.clear();
+    edges.reserve(numEdges);
+    for (int i = 0; i < numEdges; ++i) {
+        edges.push_back({graph[i][0], graph[i][1], graph[i][2]});
+    }
+}
+
+/**
+ * Sort the edge list according to the custom requirements:
+ *   1. Descending start vertex (larger IDs first)
+ *   2. Ascending goal vertex (smaller IDs first)
+ */
+static void sortEdgeList(vector<Edge>& edges) {
+    sort(edges.begin(), edges.end(), [](const Edge& a, const Edge& b) {
+        if (a.start != b.start) return a.start > b.start;   // 1️⃣ start ↓
+        return a.goal < b.goal;                             // 2️⃣ goal  ↑
+    });
+}
+
+
 /**
  * Calculate 1 step of Bellman-Ford on an input graph
  *
@@ -42,29 +72,80 @@ vector<int> getSortedVertices(int graph[][3], int numEdges) {
  * @param BFValue Current Bellman-Ford Value array (to be updated)
  * @param BFPrev Current Bellman-Ford Previous array (to be updated)
  */
-void BF(int graph[][3], int numEdges, char startVertex, int BFValue[], int BFPrev[]) {
-    if (numEdges <= 0) return;
-    vector<int> sortedVertices = getSortedVertices(graph, numEdges);
+void BF(int graph[][3], 
+        int numEdges, 
+        char startVertex, 
+        int BFValue[], 
+        int BFPrev[]) {
 
-    int startVertexIdx = getVertexIndex(startVertex, sortedVertices);
-    BFValue[startVertexIdx] = 0;
+    if (numEdges <= 0) return; // nothing to do
 
-    for (int i = 0; i < numEdges; ++i) {
-        int u = graph[i][0];
-        int v = graph[i][1];
-        int weight = graph[i][2];
+    /* ------------- gather vertex set & prepare tmp buffer ------------- */
+    vector<int> vertices = getSortedVertices(graph, numEdges);
+    const int n = vertices.size();
 
-        int u_idx = getVertexIndex(u, sortedVertices);
-        int v_idx = getVertexIndex(v, sortedVertices);
+    vector<int> BFValue_new(n);
+    vector<int> BFPrev_new(n);
+    for (int i = 0; i < n; ++i) {
+        BFValue_new[i] = BFValue[i];  
+        BFPrev_new[i] = BFPrev[i];
+    }
 
-        if (BFValue[u_idx] != -1) {
-            if ((BFValue[u_idx] + weight < BFValue[v_idx]) || (BFValue[v_idx] == -1)) {
-                BFValue[v_idx] = BFValue[u_idx] + weight;
-                BFPrev[v_idx] = u;
+    /* -------------------- build & sort edge list ---------------------- */
+    vector<Edge> edges;
+    buildEdgeList(graph, numEdges, edges);
+    sortEdgeList(edges);     // implements steps 1 & 2
+
+    // Check if this is the 1st step
+    int startVertexIdx = getVertexIndex(startVertex, vertices);
+    if (startVertexIdx == -1) {
+        BFValue[n - 1] = 0;
+        return;
+    }
+
+
+    bool flag = false;
+    if (BFValue[startVertexIdx] == -1) { // 1st step
+        for (const Edge& e : edges) {
+            const int uIdx = getVertexIndex(e.start, vertices);
+            const int vIdx = getVertexIndex(e.goal, vertices);
+
+            // cout << e.start << " " << e.goal << " " << e.weight << endl;
+
+            if (uIdx != startVertexIdx && !flag) continue; // has not reached out-going edges of startVertex yet => skip
+            else if (uIdx != startVertexIdx && flag) break;
+            else { // reached out-going edges of startVertex
+                BFValue_new[vIdx] = e.weight;
+                BFPrev_new[vIdx] = uIdx;
+                flag = true;
+            }
+
+        }
+    } else { // not 1st step
+        for (const Edge& e : edges) {
+            const int uIdx = getVertexIndex(e.start, vertices);
+            const int vIdx = getVertexIndex(e.goal, vertices);
+
+            if (BFPrev[uIdx] == -1) continue; // not reachable yet
+
+            
+            if ((BFValue[uIdx] + e.weight < BFValue[vIdx] || BFValue[vIdx] == -1) && (BFValue_new[vIdx] == BFValue[vIdx])) {
+                BFValue_new[vIdx] = BFValue[uIdx] + e.weight;
+                BFPrev_new[vIdx] = uIdx;
+                // cout << e.start << " " << e.goal << " " << e.weight << endl;
             }
         }
     }
+
+    /* ------------------------ commit results -------------------------- */
+    for (int i = 0; i < n; ++i) {
+        BFValue[i] = BFValue_new[i];   // 4.4
+        BFPrev[i] = BFPrev_new[i];
+    }
+
+    BFValue[getVertexIndex(startVertex, vertices)] = 0;
 }
+
 
 
 #if DEBUGGING
