@@ -10,8 +10,8 @@
 #include <random>
 using namespace std;
 
-#include "bellman.h"
+// #include "bellman.h"
 
-void Traveling(int graph[][3], int numEdges, char startVertex);
+string Traveling(int graph[][3], int numEdges, char startVertex);
 
 #endif

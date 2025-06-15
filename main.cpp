@@ -118,7 +118,8 @@ void testCaseBFPath3() {
 // -------------------------------------------------------
 
 void testCaseTraveling1(int graph[][3], int numEdges) {
-    Traveling(graph, numEdges, 63);
+    string out = Traveling(graph, numEdges, 63);
+    cout << out << endl;
 }
 
 void testCaseTraveling2() {
@@ -128,11 +129,13 @@ void testCaseTraveling2() {
         {67, 65, 30}
     };
     int numEdges1 = 3;
-    Traveling(graph1, numEdges1, 'A');
+    string out = Traveling(graph1, numEdges1, 'A');
+    cout << out << endl;
 }
 
 void testCaseTraveling3(int graph[][3], int numEdges) {
-    Traveling(graph, numEdges, 'M');
+    string out = Traveling(graph, numEdges, 'M');
+    cout << out << endl;
 }
 
 // -------------------------------------------------------

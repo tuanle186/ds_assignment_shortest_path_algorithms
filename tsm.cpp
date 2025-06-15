@@ -1,5 +1,38 @@
 #include "tsm.h"
 
+/**
+ * Find the index of a target vertex in the set of sorted vertices
+ *
+ * @param targetVertex The vertex whose index to be found
+ * @param setOfSortedVertices The set of all sorted vertices
+ * @return The index of targetVertex or -1 if not found
+ */
+static int getVertexIndex(const int targetVertex, const vector<int>& sortedVertices) {
+    for (int i = 0; i < static_cast<int>(sortedVertices.size()); ++i) {
+        if (sortedVertices[i] == targetVertex) return i;
+    }
+    return -1;
+}
+
+/**
+ * Calculate the sorted set of vertices from an input graph
+ *
+ * @param graph The input graph
+ * @param numEdges The number of edges in the graph
+ * @return The set of sorted vertices
+ */
+static vector<int> getSortedVertices(int graph[][3], int numEdges) {
+    vector<int> vertices;
+    for (int i = 0; i < numEdges; ++i) {
+        vertices.push_back(graph[i][0]);
+        vertices.push_back(graph[i][1]);
+    }
+    sort(vertices.begin(), vertices.end());
+    vertices.erase(unique(vertices.begin(), vertices.end()), vertices.end());
+    return vertices;
+}
+
+
 vector<vector<int>> initAndPopulateAdjMatrix(const int graph[][3], 
                                              const vector<int>& sortedVertices, 
                                              const int& numEdges, 
@@ -29,7 +62,7 @@ vector<vector<int>> initAndPopulateAdjMatrix(const int graph[][3],
  * @param startVertex
  * @return Print the shortest path over all the vertices and return to the starting vertex.
  */
-void Traveling(int graph[][3], int numEdges, char startVertex) {    
+string Traveling(int graph[][3], int numEdges, char startVertex) {    
     // 1. Initialization
     vector<int> sortedVertices = getSortedVertices(graph, numEdges);
     int numVertices = sortedVertices.size();
@@ -38,7 +71,7 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
     for (char v_char : sortedVertices) idxToVertexMap.push_back(v_char);
 
     // Handle base cases
-    if (numVertices <= 0) return; // There is no vertices in the graph
+    if (numVertices <= 0) return ""; // There is no vertices in the graph
 
     // Initialize the adjacency matrix
     vector<vector<int>> adjMatrix = initAndPopulateAdjMatrix(graph, sortedVertices, numEdges, numVertices);
@@ -92,6 +125,7 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
     }
 
     // 3. Output and Path Reconstruction
+    string result_str = "";
     if (min_total_cost == -1LL || last_vertex_in_tour == -1) {
         // cout << "No Hamiltonian cycle found" << endl; // debug
     } else {
@@ -127,15 +161,23 @@ void Traveling(int graph[][3], int numEdges, char startVertex) {
         if (min_total_cost == -1LL) { 
             // cout << "No Hamiltonian cycle found" << endl; // debug
         } else {
-            cout << startVertex; // Print original start character
+            // cout << startVertex; // Print original start character
+            result_str += startVertex;
+            result_str += " ";
+            
             reverse(tour_nodes_intermediate_indices.begin(), tour_nodes_intermediate_indices.end());
             
             for (int node_idx : tour_nodes_intermediate_indices) {
-                cout << " " << static_cast<char>(idxToVertexMap[node_idx]);
+                // cout << " " << static_cast<char>(idxToVertexMap[node_idx]);
+                result_str += static_cast<char>(idxToVertexMap[node_idx]);
+                result_str += " ";
             }
             // Print return to start vertex (original char)
-            cout << " " << startVertex << endl;
+            // cout << " " << startVertex << endl;
+            result_str += startVertex;
             // cout << "Cost: " << min_total_cost << endl; // debug
         }
     }
+
+    return result_str;
 }

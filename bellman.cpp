@@ -51,14 +51,12 @@ static void buildEdgeList(int graph[][3], int numEdges, vector<Edge>& edges) {
 }
 
 /**
- * Sort the edge list according to the custom requirements:
- *   1. Descending start vertex (larger IDs first)
- *   2. Ascending goal vertex (smaller IDs first)
+ * Sort the edge list in ascending order of start vertex,
+ * but preserve the original order of edges when start vertices are equal.
  */
 static void sortEdgeList(vector<Edge>& edges) {
-    sort(edges.begin(), edges.end(), [](const Edge& a, const Edge& b) {
-        if (a.start != b.start) return a.start > b.start;   // 1️⃣ start ↓
-        return a.goal < b.goal;                             // 2️⃣ goal  ↑
+    stable_sort(edges.begin(), edges.end(), [](const Edge& a, const Edge& b) {
+        return a.start < b.start;
     });
 }
 
@@ -109,8 +107,6 @@ void BF(int graph[][3],
             const int uIdx = getVertexIndex(e.start, vertices);
             const int vIdx = getVertexIndex(e.goal, vertices);
 
-            // cout << e.start << " " << e.goal << " " << e.weight << endl;
-
             if (uIdx != startVertexIdx && !flag) continue; // has not reached out-going edges of startVertex yet => skip
             else if (uIdx != startVertexIdx && flag) break;
             else { // reached out-going edges of startVertex
@@ -127,11 +123,9 @@ void BF(int graph[][3],
 
             if (BFPrev[uIdx] == -1) continue; // not reachable yet
 
-            
-            if ((BFValue[uIdx] + e.weight < BFValue[vIdx] || BFValue[vIdx] == -1) && (BFValue_new[vIdx] == BFValue[vIdx])) {
+            if (BFValue[uIdx] + e.weight < BFValue_new[vIdx] || BFValue_new[vIdx] == -1) {
                 BFValue_new[vIdx] = BFValue[uIdx] + e.weight;
                 BFPrev_new[vIdx] = uIdx;
-                // cout << e.start << " " << e.goal << " " << e.weight << endl;
             }
         }
     }
@@ -144,22 +138,6 @@ void BF(int graph[][3],
 
     BFValue[getVertexIndex(startVertex, vertices)] = 0;
 }
-
-
-
-#if DEBUGGING
-void printBFValue(int BFValue[], int n) {
-    cout << "BFValue: ";
-    for (int i = 0; i < n; ++i) cout << BFValue[i] << ", ";
-    cout << endl;
-}
-
-void printBFPrev(int BFPrev[], int n) {
-    cout << "BFPrev: ";
-    for (int i = 0; i < n; ++i) cout << BFPrev[i] << ", ";
-    cout << endl;
-}
-#endif
 
 
 /**
@@ -191,9 +169,6 @@ string BF_Path(int graph[][3], int numEdges, char startVertex, char goalVertex) 
 
     for (int i = 0; i < numVertices - 1; ++i) 
         BF(graph, numEdges, startVertex, BFValue, BFPrev);
-
-    // printBFValue(BFValue, numVertices);
-    // printBFPrev(BFPrev, numVertices);
 
     // If there's no path
     if (BFValue[goalVertexIdx] == -1) {
